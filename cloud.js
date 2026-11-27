@@ -26,6 +26,6 @@ window.OneCutCloud=(function(){
  async function loadAdmin(){const d=await request('/api/cloud/cards');version=d.version;return d.cards;}
  async function save(cards){const d=await request('/api/cloud/cards',{method:'POST',body:JSON.stringify({cards,expected_version:version})});version=d.version;return d;}
  async function migrate(cards){const d=await request('/api/cloud/migrate',{method:'POST',body:JSON.stringify({cards,expected_version:version})});version=d.version;return d;}
- async function published(){const d=await request('/api/cloud/published');return d.cards;}
+ async function published(){const d=await request('/api/cloud/published');return Array.isArray(d)?d:(d.cards||[]);}
   return {status,login,logout,me,loadAdmin,save,migrate,published,request,get enabled(){return enabled},get ready(){return ready},set ready(v){ready=v},get token(){return token},get user(){return user},get lastError(){return lastError},set lastError(v){lastError=v}};
 })();
