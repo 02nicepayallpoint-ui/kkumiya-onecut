@@ -11,6 +11,10 @@
 .onecut-phon{font-size:15px;font-weight:650;color:#293751;margin:9px 0 14px}.onecut-hangul{border-left:1px solid #bcc6d6;margin-left:12px;padding-left:12px}
 .onecut-meaning{display:table;max-width:100%;margin:0 auto 15px;background:#ffe36e;border:1px solid #ebcd4c;border-radius:24px;padding:9px 18px;font-size:17px;font-weight:850;color:#172338}
 .onecut-scene{border:1px solid #eef0f4;border-radius:13px;overflow:hidden;background:#fff;min-height:180px;display:grid;place-items:center}
+.module-tabs{display:flex;gap:8px;align-items:center;padding:6px 10px;background:#f6f7fa;border:1px solid #e6e9ee;border-radius:12px}
+.module-tabs .small{color:#708097;margin-left:4px;white-space:nowrap}
+.module-tabs button.active,.module-tabs button.primary{background:#172338;color:#fff;border-color:#172338}
+@media(max-width:720px){.module-tabs{padding:4px 6px}.module-tabs .small{display:none}}
 .onecut-scene img{width:100%;aspect-ratio: 1.65;object-fit:contain;display:block}
 .onecut-placeholder{padding:55px 20px;color:#78869b;font-size:14px}.onecut-placeholder small{display:block;margin-top:9px}
 .onecut-mnemonic{margin:13px auto 0;border-radius:18px;background:#fff0f0;padding:13px 16px;font-size:17px;font-weight:800;line-height:1.6;color:#172338;white-space:pre-wrap}

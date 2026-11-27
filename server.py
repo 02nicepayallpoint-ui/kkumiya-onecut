@@ -32,7 +32,8 @@ def load_private_env():
         if value.startswith(('\"',"'")) and len(value)>=2 and value[-1]==value[0]: value=value[1:-1]
         if value and name not in os.environ: os.environ[name]=value
 load_private_env()
-HOST = os.environ.get('HOST', '127.0.0.1')
+# 로컬은 127.0.0.1 기본, 클라우드(Render 등)는 PORT가 주어지므로 0.0.0.0에 바인딩
+HOST = '0.0.0.0' if os.environ.get('PORT') else os.environ.get('HOST', '127.0.0.1')
 PORT = int(os.environ.get('PORT') or os.environ.get('ONECUT_PORT', '8766'))
 AI_MODEL = os.environ.get('ONECUT_TEXT_MODEL', 'gpt-4.1-mini')
 IMAGE_MODEL = os.environ.get('ONECUT_IMAGE_MODEL', 'gpt-image-2.5-flare')
