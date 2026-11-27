@@ -1,0 +1,1729 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>한컷영단어 · 제작 관리자 v5.3.0</title><link rel="stylesheet" href="style.css?v=5.3.0"><script>try{if(localStorage.getItem('onecut_font_size')==='large')document.documentElement.classList.add('font-large-preload')}catch(e){}</script><style id="personal-mode-v512">
+/* 현 제작 흐름: ChatGPT 텍스트·이미지 → 패키지 ZIP 등록 → 검수·수정 → 공개.
+   최초 자동 생성 기능은 숨기고, 개선용 재작업·수정 기능은 유지한다. */
+#studentManagement,#groupManagement,#reportPanel,#batchAdvanced,
+#advancedAdmin,#serverCheck,
+#batchStudio .quick-production,#batchStudio .quick-review-panel,
+#batchStudio #batchProgress,#batchStudio #batchRunSummary,
+#releasePanel{display:none!important}
+#excelImportPanel>details,
+#excelImportPanel .production-head h3,
+#excelImportPanel #excelImportFile,
+#excelImportPanel #excelImportPreview,
+#excelImportPanel #excelImportCommit,
+#excelImportPanel #excelBatchLimit,
+#excelImportPanel #excelCreateImages,
+#excelImportPanel #excelCreateRemainingAll,
+#excelImportPanel #excelStopImages,
+#excelImportPanel #excelRetryHold,
+#excelImportPanel #excelImageQueue,
+#excelImportPanel #excelImageProgress,
+#excelImportPanel .divider{display:none!important}
+#add{display:none!important}
+.catalog-panel-hint{display:none}
+#catalogPanel details{display:none!important}
+#catalogPanel .production-head h2{font-size:1.2rem}
+@media(max-width:720px){.quick-batch-controls{display:grid!important;grid-template-columns:1fr 1fr}.quick-batch-controls .small{grid-column:1/-1}.production-tools{flex-wrap:wrap}.queue-table-scroll{overflow-x:auto}}
+#advancedAdmin{margin-top:14px}
+#advancedAdmin>summary{cursor:pointer;font-weight:800;color:#42516b;list-style:none}
+#advancedAdmin>summary::-webkit-details-marker{display:none}
+#advancedAdminMount{display:grid;gap:14px;margin-top:14px}
+#advancedAdminMount>.panel,#advancedAdminMount>#batchStudio{margin:0;box-shadow:none}
+.production-board .queue-table th:nth-child(1),.production-board .queue-table td:nth-child(1),.production-board .queue-table th:nth-child(5),.production-board .queue-table td:nth-child(5){display:none}
+#excelCreateRemainingAll{font-weight:850}
+</style></head><body><header><div class="top"><div class="logo">한<em>컷</em>영단어 <span class="small">제작 스튜디오 v5.3.0</span></div><div class="readability-controls" aria-label="글자 크기 설정"><span class="readability-label">글자 크기</span><button class="btn" data-font-size="normal" type="button" aria-pressed="true">기본</button><button class="btn" data-font-size="large" type="button" aria-pressed="false">크게</button></div><nav><a href="index.html">학생용 화면 ↗</a><a href="README.md">사용 안내</a></nav></div></header><section id="cloudLogin" class="cloud-login" hidden><h2>관리자 로그인</h2><p>클라우드 모드에서는 승인된 관리자 계정만 콘텐츠를 수정할 수 있습니다.</p><form id="cloudLoginForm"><label>이메일<input id="cloudEmail" type="email" autocomplete="username" required></label><label>비밀번호<input id="cloudPassword" type="password" autocomplete="current-password" required></label><button class="btn primary" type="submit">로그인</button></form><p id="cloudLoginMessage" aria-live="polite"></p></section><div id="cloudToolbar" class="cloud-toolbar" hidden><b id="cloudState">클라우드 연결 준비 중</b><button class="btn" id="cloudSync">클라우드 새로고침</button><button class="btn" id="cloudLogout">로그아웃</button></div><main id="adminMain"><h1>콘텐츠 제작</h1><p class="sub">콘텐츠 패키지 ZIP 등록 → 카드 검수·수정 → 승인·공개. 새 아이디어가 나오면 편집기에서 연상·이미지를 다시 제작해 개선할 수 있습니다.</p><div id="stats" class="toolbar"></div>
+<section class="panel" id="excelImportPanel" aria-label="엑셀 기반 웹툰 제작">
+ <div class="row production-head"><div><h2>콘텐츠 패키지 등록</h2><p class="small">이 채팅에서 확정한 엑셀과 이미지가 함께 들어 있는 ZIP 하나만 올리면 신규 카드와 이미지를 순서대로 자동 연결합니다.</p></div><span class="tag draft">v5.3.0 · ZIP 한 번에 등록</span></div>
+ <div class="notice"><b>현재 제작 흐름</b> · ChatGPT에서 확정한 텍스트와 이미지를 패키지로 받아 ZIP 한 번에 등록 → 검수 → 공개합니다. ZIP 안에는 콘텐츠 엑셀 1개 + <b>영어단어_핵심뜻.png</b> 형식 이미지(예: urgent_긴급한.png)가 있으면 됩니다. AI 이미지 생성·AI QA는 다시 실행하지 않으며 자동 공개도 하지 않습니다.</div>
+ <label class="field">콘텐츠 패키지 ZIP 선택 (최대 50MB)<input id="contentPackageZip" type="file" accept=".zip,application/zip"></label>
+ <div class="controls"><button class="btn primary" type="button" id="contentPackageUpload" disabled>ZIP 한 번에 등록</button></div>
+ <label class="field">서버에 둔 ZIP 경로 (큰 파일용)<input id="contentPackagePath" placeholder="test_packages/unit1_1_package.zip"></label>
+ <div class="controls"><button class="btn" type="button" id="contentPackagePathUpload">서버 경로로 등록</button></div>
+ <div class="notice" id="contentPackageStatus" aria-live="polite">엑셀 행 순서, 이미지 파일명의 영어 단어 또는 001_ 앞번호로 자동 매칭합니다. 신규 카드는 비공개 초안으로 저장됩니다.</div>
+ <div class="divider"></div>
+ <details class="legacy-import" style="display:none"><summary><b>기존 방식 · 엑셀/이미지 따로 등록</b></summary><div style="margin-top:12px">
+ <div class="row production-head"><div><h3>엑셀로 AI 웹툰 제작</h3><p class="small">한컷영단어 엑셀(.xlsx)의 연상·말풍선·이미지 장면을 그대로 가져옵니다. 뜻마다 독립 카드로 등록하며 기존 공개 카드는 수정하지 않습니다.</p></div><span class="tag draft">v5.3.0 · 검증 이미지 일괄등록</span></div>
+ <label class="field">엑셀 파일 선택 (.xlsx, 최대 6MB)<input id="excelImportFile" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"></label>
+ <div class="notice" id="excelImportPreview" aria-live="polite">엑셀을 선택하면 17개 콘텐츠의 유효성·중복 여부를 먼저 검사합니다.</div>
+ <div class="controls"><button class="btn primary" type="button" id="excelImportCommit" disabled>엑셀 등록 + AI 웹툰 제작</button>
+<label class="field" for="excelBatchLimit">이번 제작 수<select id="excelBatchLimit"><option value="1" selected>1장 시험</option><option value="3">3장</option><option value="10">10장</option><option value="all">전체 제작</option></select></label>
+<button class="btn" type="button" id="excelCreateImages" disabled>선택 수 이미지 제작</button><button class="btn primary" type="button" id="excelCreateRemainingAll" disabled>남은 전체 이미지 자동생성</button><button class="btn danger" type="button" id="excelStopImages" disabled>현재 이미지 후 중지</button><button class="btn" type="button" id="excelRetryHold" disabled>선택 카드 재시도 허용</button></div>
+ <p class="small">엑셀의 확정 연상문장·장면을 그대로 사용합니다. 처음에는 1장 시험을 권장하고, 확인 후 ‘남은 전체 이미지 자동생성’으로 이미지 없는 카드만 순서대로 제작할 수 있습니다. QA 실패·API 오류는 자동 재시도하지 않으며 자동 공개도 하지 않습니다.</p>
+ <div class="small" id="excelImageQueue" role="status"></div><div class="small" id="excelImageProgress" role="status" aria-live="polite"></div>
+ <div class="divider"></div>
+ <h3>검증 완료 이미지 일괄 등록</h3>
+ <p class="small">이 채팅에서 먼저 검수한 이미지를 ZIP으로 한 번에 등록합니다. 이미지 파일명은 <b>영어단어_핵심뜻.png</b> 형식(예: urgent_긴급한.png)으로 저장해 주세요. 기존 <b>001_단어.png, 002_단어.png …</b> 순번도 지원합니다. AI 이미지 생성·AI QA를 다시 실행하지 않으며 자동 공개도 하지 않습니다.</p>
+ <label class="field">이미지 ZIP 선택 (최대 50MB)<input id="excelImageZip" type="file" accept=".zip,application/zip"></label>
+ <div class="controls"><button class="btn primary" type="button" id="excelImageZipUpload" disabled>검증 완료 이미지 ZIP 등록</button></div>
+ <div class="notice" id="excelImageZipStatus" aria-live="polite">파일명의 영어 단어 또는 엑셀 순번으로 자동 매칭합니다. 일부 이미지만 올릴 때도 단어명(예: urgent_긴급한.png)이나 원래 순번(예: 006_)을 유지하세요.</div>
+ </div></details>
+</section>
+<details class="panel" id="advancedAdmin"><summary>고급 관리 · 자동 제작 로그 · 단어 분류 · 출시 점검</summary><div id="advancedAdminMount"></div></details>
+<section class="panel batch-studio" id="batchStudio" aria-label="AI 일괄 콘텐츠 제작">
+ <div class="row production-head"><div><h2>AI 콘텐츠 일괄 제작</h2><p class="small">초안별로 연상 3안을 생성·검수하며 실패 이유를 반영해 최대 3차 시도합니다. 통과한 후보만 웹툰으로 만듭니다. 부적합 후보는 보류하며 학생 공개는 관리자가 합니다.</p></div><span class="tag draft">제작 자동 · 공개 수동</span></div>
+ <div class="quick-production" aria-label="간편 AI 자동 제작">
+  <h3>AI 자동 제작</h3>
+  <p class="small">모든 제작·검수는 AI가 진행하며, 실제 공개는 관리자가 결정합니다. 유료 API 요청은 실행 전 확인합니다.</p>
+  <div class="quick-mode" role="group" aria-label="제작 방식">
+    <button type="button" class="btn primary" id="quickRetry" aria-pressed="true">품질 미달 단어 다시 제작</button>
+    <button type="button" class="btn" id="quickNew" aria-pressed="false">새 단어 자동 제작</button>
+  </div>
+  <p id="quickTarget" class="quick-target" role="status" aria-live="polite">제작 대상 확인 중…</p>
+  <button type="button" class="btn primary quick-start" id="quickStart">선택 단어 1개 자동 제작 시작</button>
+  <div class="controls quick-batch-controls" aria-label="묶음 자동 제작">
+    <button type="button" class="btn" id="quickBatch5">다음 5개 자동 제작</button>
+    <button type="button" class="btn" id="quickBatch10">다음 10개 자동 제작</button>
+    <span class="small">각 단어는 독립 검수 후 통과한 경우에만 이미지 생성 · 자동 공개 없음</span>
+  </div>
+  <p class="small">한 번에 1개 · 후보 생성과 평가를 최대 3차 진행 · 기준 통과 시 그림 1장 · 자동 공개 없음</p>
+ </div>
+ <details class="batch-advanced" id="batchAdvanced"><summary>고급 설정 · 여러 단어 제작 · CSV</summary>
+ <div class="batch-toolbar"><label class="field">작업 범위<select id="batchScope"><option value="ready">연상 후보가 없는 초안</option><option value="all">모든 미공개 단어 (기존 후보 있으면 제외)</option><option value="retry" selected>품질 미달 · 보류된 자동 제작 재시도</option></select></label><label class="field">작업 단어 수<select id="batchLimit"><option value="1" selected>1개</option><option value="3">3개</option><option value="5">5개</option><option value="10">10개</option></select></label></div>
+ <p class="small">필수: 단어·품사·IPA·뜻. IPA/강세 자동 검증은 제공하지 않으므로 최종 확인이 필요합니다. API 사용량에 따라 비용이 발생합니다.</p>
+ <div class="controls"><button type="button" class="btn primary" id="batchPrepareStarter">테스트 단어 10개 준비</button><span class="small">CSV 파일 선택 없이 중복 검사 후 초안 등록 · AI 호출 없음</span></div>
+ <div id="batchSelection" class="batch-selection" aria-label="제작 대상 단어"></div>
+ <div class="controls"><button type="button" class="btn primary" id="batchMnemonicStart">자동 제작 시작 (연상 3안 → 평가 → 이미지)</button><button type="button" class="btn" id="batchImageStart">기존 확정 문장만 이미지 제작 (최대 3개)</button><button type="button" class="btn danger" id="batchStop" disabled>현재 작업 후 중지</button><button type="button" class="btn" id="batchReport">결과 CSV</button></div>
+ </details>
+ <div id="batchProgress" class="notice" role="status" aria-live="polite">자동 제작 시작을 누르면 선택 단어의 후보 3개를 평가하고 통과 후보가 나올 때까지 최대 3차례 개선하고, 통과한 1개만 이미지로 제작합니다. 이미지 생성 API 비용이 발생합니다.</div>
+ <div id="batchRunSummary" class="quick-review-summary" hidden></div>
+ <div class="queue-table-scroll"><table class="queue-table"><thead><tr><th>단어</th><th>작업 결과</th><th>후속 작업</th></tr></thead><tbody id="batchResults"></tbody></table></div>
+ <div class="row" style="margin-top:16px"><h3 style="margin:0">클라우드에 저장된 자동 제작·검수 목록</h3><span class="small">새로고침 후에도 카드 기록에서 복원</span></div>
+ <div class="queue-table-scroll"><table class="queue-table"><thead><tr><th>단어</th><th>AI 검수 결과</th><th>이미지</th><th></th></tr></thead><tbody id="savedBatchResults"></tbody></table></div>
+ <section id="quickReviewPanel" class="quick-review-panel" aria-label="최종 검수 대기" hidden></section>
+ </section>
+<section id="serverCheck" class="server-check" aria-live="polite">서버 상태 확인 중…</section><section class="production-board panel" aria-label="콘텐츠 제작 대기열">
+ <div class="row production-head"><div><h2>오늘의 콘텐츠 제작</h2><p class="small">단어마다 다음 할 일을 자동 분류합니다. 단어를 공개하거나 AI를 실행하지는 않습니다.</p></div>
+ <div class="production-tools"><label class="field" for="queueFilter">보기<select id="queueFilter"><option value="all">전체 작업</option><option value="mnemonic">연상문장 준비</option><option value="image">이미지 자동 처리</option><option value="review">공개 전 확인</option><option value="rejected">보류</option><option value="published">공개 완료</option></select></label><button type="button" class="btn primary" id="queueNext">다음 미완료 단어</button><button type="button" class="btn" id="queueExport">작업 목록 CSV</button></div></div>
+ <div id="queueSummary" class="queue-summary"></div><p id="queueGuide" class="small">위험도 높은 재작업 → 공개 직전 검수 → 일반 제작 순으로 자동 정렬합니다.</p><div class="queue-table-scroll"><table class="queue-table"><thead><tr><th>우선</th><th>단어</th><th>현재 상태</th><th>다음 작업 · 원인</th><th>검수 점수</th><th></th></tr></thead><tbody id="queueRows"></tbody></table></div>
+</section><section class="panel student-management" id="studentManagement" aria-label="학생 학습관리">
+ <div class="row production-head"><div><h2>학생 학습관리</h2><p class="small">학생별 누적 학습·완전 암기·취약단어·복습 대기를 한눈에 확인합니다. 학습 내용은 수정하지 않습니다.</p></div><div class="production-tools"><button type="button" class="btn primary" id="loadStudentOverview">학습현황 새로고침</button></div></div>
+ <div id="studentSummary" class="queue-summary"><span class="small">클라우드 로그인 후 학생 현황을 불러올 수 있습니다.</span></div>
+ <div class="student-overview-tools"><label class="field">학생 찾기<input id="studentSearch" type="search" placeholder="이메일 또는 학생 ID"></label><label class="field">보기<select id="studentFilter"><option value="all">전체 학생</option><option value="attention">복습·취약 관리 필요</option><option value="active">오늘 학습</option><option value="mastered">완전 암기 보유</option></select></label></div>
+ <div class="queue-table-scroll"><table class="queue-table student-table"><thead><tr><th>학생</th><th>오늘</th><th>누적 학습</th><th>완전 암기</th><th>정답률</th><th>취약</th><th>복습 대기</th><th>최근 학습</th><th></th></tr></thead><tbody id="studentRows"><tr><td colspan="9" class="small">아직 학생 현황을 불러오지 않았습니다.</td></tr></tbody></table></div>
+ <section id="studentDetailPanel" class="student-detail-panel" hidden>
+  <div class="row production-head"><div><h3 id="studentDetailTitle">학생 상세 학습분석</h3><p class="small" id="studentDetailMeta"></p></div><button type="button" class="btn" id="closeStudentDetail">상세 닫기</button></div>
+  <div id="studentDetailSummary" class="queue-summary"></div>
+  <div class="student-period-grid"><article><b>최근 7일</b><strong id="student7Accuracy">-</strong><span id="student7Meta" class="small"></span></article><article><b>최근 30일</b><strong id="student30Accuracy">-</strong><span id="student30Meta" class="small"></span></article></div>
+  <div id="studentTrend" class="student-trend" aria-label="최근 30일 학습 추세"></div>
+  <div class="student-detail-grid"><div><div class="row"><h4>취약단어 Top 10</h4><button type="button" class="btn" id="exportWeakWords">취약단어 CSV</button></div><div id="studentWeakTop" class="student-word-cards"></div></div><div><h4>최근 오답</h4><div id="studentRecentWrong" class="student-word-cards"></div></div></div>
+  <section class="notice" id="nextLearningRecommend"><div class="row production-head"><div><h4 style="margin:0">다음 맞춤 학습 추천</h4><p class="small" style="margin:6px 0 0">취약단어를 우선하고 남는 자리는 아직 학습하지 않은 공개단어로 채웁니다. 추천만으로는 배정되지 않습니다.</p></div><div class="production-tools"><select id="recommendCount"><option value="5">5단어</option><option value="10">10단어</option></select><button type="button" class="btn" id="loadRecommendation">추천 만들기</button></div></div><div id="recommendationBox" class="student-word-cards"><p class="small">추천 만들기를 누르면 학생의 현재 기록을 분석합니다.</p></div><div class="controls"><button type="button" class="btn primary" id="approveRecommendation" disabled>추천 그대로 학생에게 배정</button></div></section>
+  <details open><summary>단어별 학습상태</summary><div class="queue-table-scroll"><table class="queue-table"><thead><tr><th>단어</th><th>상태</th><th>학습</th><th>연속 성공</th><th>망각</th><th>복습 간격</th><th>다음 복습</th></tr></thead><tbody id="studentWordRows"></tbody></table></div></details>
+ </section>
+ <p id="studentOverviewNote" class="small" aria-live="polite">서비스 역할 키는 서버 내부에서만 사용하며 브라우저에는 전달하지 않습니다.</p>
+</section>
+<section class="panel group-management" id="groupManagement" aria-label="그룹 및 학습세트 관리">
+ <div class="row production-head"><div><h2>그룹 · 학습세트 배정</h2><p class="small">반/그룹을 만들고 학생을 묶은 뒤 공개 단어를 5개·10개 학습세트로 배정합니다.</p></div><button class="btn primary" type="button" id="loadGroups">그룹 새로고침</button></div>
+ <div class="group-create-row"><input id="newGroupName" maxlength="80" placeholder="예: 중1 A반"><button class="btn" type="button" id="createGroup">그룹 만들기</button></div>
+ <div id="groupCards" class="group-cards"><p class="small">관리자 로그인 후 그룹 정보를 불러오세요.</p></div>
+ <details open><summary>학습세트 배정</summary>
+  <div class="assignment-form"><label>세트 제목<input id="assignmentTitle" maxlength="100" placeholder="예: 11월 3주차 필수 10단어"></label><label>대상<select id="assignmentTargetType"><option value="group">그룹</option><option value="student">학생</option></select></label><label>배정 대상<select id="assignmentTarget"></select></label><label>단어 수<select id="assignmentCount"><option value="5">5개</option><option value="10" selected>10개</option></select></label><button class="btn primary" type="button" id="createAssignment">공개 단어 배정</button></div>
+  <p class="small">현재 공개 단어 중 앞에서부터 선택한 수만큼 배정합니다. 학생 화면에서는 배정된 카드만 모아 바로 학습할 수 있습니다.</p>
+  <div class="assignment-monitor"><div id="assignmentSummary" class="queue-summary"></div><label class="field compact-filter">배정 진행상태<select id="assignmentProgressFilter"><option value="active">진행 중 배정</option><option value="incomplete">미완료 학생 있음</option><option value="attention">취약·복습 필요</option><option value="completed">전원 완료</option><option value="all">전체</option></select></label></div><div id="assignmentList" class="assignment-list"></div>
+ </details>
+ <p id="groupNote" class="small" aria-live="polite"></p>
+</section>
+
+<section class="panel platform-v5" id="catalogPanel" aria-label="개인 학습용 단어 분류">
+ <div class="row production-head"><div><h2>단어 분류</h2><p class="small">개인 맞춤 학습 추천에 사용할 난이도·학년·시험범위·주제를 관리합니다.</p></div><button class="btn primary" type="button" id="loadCatalog">분류정보 불러오기</button></div>
+ <div id="catalogSummary" class="queue-summary"><span class="small">v5 DB 확장 후 분류정보를 불러오세요.</span></div>
+ <div class="v5-form-grid"><label>단어<select id="metaCard"></select></label><label>난이도<select id="metaDifficulty"><option>미분류</option><option>초급</option><option>중급</option><option>고급</option></select></label><label>학년·과정<select id="metaSchool"><option>미분류</option><option>초등</option><option>중등</option><option>고등</option><option>수능</option></select></label><label>시험범위<input id="metaExam" placeholder="예: 수능 필수, 중2 2학기"></label><label>주제<input id="metaTopic" placeholder="예: 감정, 학교, 사회"></label><label>태그<input id="metaTags" placeholder="쉼표로 구분"></label><button class="btn" type="button" id="saveMeta">분류 저장</button></div>
+ <details open><summary>그룹 자동 커리큘럼</summary><div class="v5-form-grid"><label>대상 그룹<select id="curriculumGroup"></select></label><label>세트당 단어<select id="curriculumCount"><option value="5">5개</option><option value="10" selected>10개</option></select></label><label>회차<select id="curriculumSessions"><option value="1">1회</option><option value="2">2회</option><option value="3">3회</option><option value="4">4회</option></select></label><label>난이도<select id="curriculumDifficulty"><option value="">전체</option><option>초급</option><option>중급</option><option>고급</option></select></label><label>학년·과정<select id="curriculumSchool"><option value="">전체</option><option>초등</option><option>중등</option><option>고등</option><option>수능</option></select></label><label>시험범위<input id="curriculumExam" placeholder="비우면 전체"></label><label>주제<input id="curriculumTopic" placeholder="비우면 전체"></label><label>마감 간격<select id="curriculumDue"><option value="3">3일</option><option value="7" selected>7일</option><option value="14">14일</option></select></label><label>커리큘럼 이름<input id="curriculumTitle" value="맞춤 자동 커리큘럼"></label></div><div class="controls"><button class="btn" type="button" id="previewCurriculum">추천 미리보기</button><button class="btn primary" type="button" id="applyCurriculum" disabled>학생별 맞춤 배정 생성</button></div><div id="curriculumPreview" class="curriculum-preview"><p class="small">그룹을 선택하고 미리보기를 실행하세요.</p></div></details>
+ <p id="catalogNote" class="small" aria-live="polite"></p>
+</section>
+<section class="panel platform-v5" id="reportPanel" aria-label="학습 리포트">
+ <div class="row production-head"><div><h2>교사용 · 학부모용 학습 리포트</h2><p class="small">학생 또는 그룹의 학습량, 완전 암기, 취약단어, 복습 대기, 실전 테스트 성적을 7일·30일 단위로 확인합니다.</p></div><div class="production-tools"><button class="btn" id="printReport" type="button">현재 리포트 인쇄</button><button class="btn" id="serverBackup" type="button">운영 데이터 JSON 백업</button></div></div>
+ <div class="v5-form-grid"><label>대상<select id="reportType"><option value="student">학생</option><option value="group">그룹</option></select></label><label>학생/그룹<select id="reportTarget"></select></label><label>기간<select id="reportDays"><option value="7">최근 7일</option><option value="30" selected>최근 30일</option></select></label><button class="btn primary" type="button" id="loadReport">리포트 만들기</button></div>
+ <div id="reportOutput" class="report-output"><p class="small">학생 현황과 그룹 정보를 불러온 뒤 리포트를 생성할 수 있습니다.</p></div>
+</section>
+<section class="panel release-panel" id="releasePanel" aria-label="베타 출시 준비 점검">
+ <div class="row production-head"><div><h2>출시 준비 점검</h2><p class="small">현재 단어 데이터를 읽어 필수 정보, 공개 상태, 강세, 이미지 경로를 점검합니다. 승인·공개와 데이터 수정은 하지 않습니다.</p></div><div class="production-tools"><button type="button" class="btn primary" id="runReleaseAudit">전체 단어 진단</button><button type="button" class="btn" id="exportReleaseAudit" disabled>진단 CSV 다운로드</button></div></div>
+ <p id="releaseAuditSummary" class="small" aria-live="polite">전체 단어 진단을 누르면 공개 중인 카드와 미완성 카드를 구분해서 보여줍니다.</p><div class="queue-table-scroll" id="releaseAuditWrap" hidden><table class="queue-table"><thead><tr><th>단어</th><th>공개 상태</th><th>필수 항목</th><th>권고 사항</th><th></th></tr></thead><tbody id="releaseAuditRows"></tbody></table></div>
+ <p class="small">이미지 검사 결과는 현재 서버 파일 기준입니다. Supabase에만 저장된 이미지는 별도 확인하며, 검사 불가 항목은 단정하지 않습니다. AI 연상 품질 및 저작권 적합성은 관리자가 직접 검수해야 합니다.</p>
+</section><div class="grid"><aside class="panel side"><div class="row" style="margin-bottom:15px"><h2 style="margin:0">단어 목록</h2><button class="btn primary" id="add">+ 추가</button></div><input type="search" id="q" placeholder="단어·뜻 검색"><div class="toolbar"><span class="small" id="count"></span></div><label class="field compact-filter">상태별 보기<select id="cardStatusFilter"><option value="all">전체 단어</option><option value="draft">초안·검수</option><option value="published">공개</option><option value="rejected">보류</option></select></label><details class="admin-tools"><summary>설정 · 백업 · 이미지 검사</summary><div class="controls"><button class="btn" id="backup">JSON 백업</button><button type="button" class="btn" id="imageAuditAll">전체 이미지 점검</button></div><label class="field">백업 JSON 가져오기<input id="import" type="file" accept="application/json,.json"></label><button type="button" class="btn" id="migrateLocal" hidden>기존 로컬 카드 클라우드로 가져오기</button></details><details class="admin-tools" id="bulkImportPanel"><summary>단어 여러 개 등록 (CSV)</summary>
+<p class="small">한 번에 최대 300개를 <b>초안</b>으로 등록합니다. 기존 단어는 덮어쓰지 않으며, 이미지·연상문장은 이후 제작합니다.</p>
+<div class="controls"><button class="btn" type="button" id="downloadCsvTemplate">CSV 예시 다운로드</button><button class="btn" type="button" id="downloadCsvStarter">AI 제작 테스트용 10단어 CSV</button></div><p class="small">테스트용 10단어를 CSV로 내려받아 검사한 후 초안으로 등록할 수 있습니다. 자동 등록하거나 AI를 호출하지 않습니다. IPA와 강세는 공개 전에 직접 확인하세요.</p>
+<label class="field" for="bulkCsvFile">CSV 파일 선택 <input id="bulkCsvFile" type="file" accept=".csv,text/csv,text/plain"></label>
+<div id="bulkCsvPreview" class="small" aria-live="polite">파일을 선택하면 등록 가능 건수와 중복·오류를 먼저 확인합니다.</div>
+<button class="btn primary" id="bulkCsvCommit" type="button" disabled>검토 후 초안 등록</button>
+</details><div class="list" id="list"></div></aside><section class="panel" id="editor"></section></div></main><div class="footer">로컬 시제품 · 정식 배포에는 로그인·DB 접근제어·서버 승인 검증이 필요합니다.</div><script src="shared.js?v=5.2.9"></script><script src="cloud.js?v=5.2.9"></script><script>
+'use strict'; const api=OneCut,$=id=>document.getElementById(id);let cards=api.load(),selected=cards[0]?.id;
+let cloudImageRequest=0;
+async function hydrateCloudImages(){
+ if(!OneCutCloud.enabled||!OneCutCloud.token)return;
+ const currentCard=current();if(!currentCard)return;
+ const paths=[...new Set([currentCard.sceneImage,...availableImageVersions(currentCard).map(v=>v.path)].filter(p=>typeof p==='string'&&p.startsWith('assets/')))];
+ if(!paths.length)return;const requestId=++cloudImageRequest;const cardId=currentCard.id;
+ try{
+  const response=await OneCutCloud.request('/api/cloud/image-urls',{method:'POST',body:JSON.stringify({paths})});
+  if(requestId!==cloudImageRequest||current()?.id!==cardId)return;
+  const urls=response.urls||{};
+  document.querySelectorAll('#editor img[src], #editor a[href]').forEach(element=>{
+   const original=element.dataset.originalScenePath||element.getAttribute(element.tagName==='IMG'?'src':'href');
+   if(!Object.prototype.hasOwnProperty.call(urls,original))return;
+   const url=urls[original];if(!url)return;
+   element.dataset.originalScenePath=original;
+   if(element.tagName==='IMG'){
+    element.hidden=false;
+    const warning=element.parentElement?.querySelector('.image-missing-notice');if(warning)warning.remove();
+    element.parentElement?.classList.remove('scene-image-missing');
+    element.src=url;
+   }else{element.href=url;}
+  });
+ }catch(err){console.warn('클라우드 이미지 미리보기 조회 실패:',err.message);}
+}
+
+
+function migrateLegacyPreview(c){
+ if(c.sceneImage || c.sceneImageMode==='clean')return;
+ const known={idiot:'idiot',immense:'immense',impenetrable:'impenetrable','rebel-n':'rebel-n','rebel-v':'rebel-v'};
+ const name=String(c.image||'').split('/').pop().replace(/\.(webp|png|jpg)$/i,'');
+ if(known[name]){c.sceneImage='assets/preview/'+known[name]+'.webp';c.sceneImageMode='legacy-crop';}
+}
+cards.forEach(migrateLegacyPreview);
+const labels={draft:'초안',review:'검수 중',approved:'승인',published:'공개',rejected:'반려'};const workLabels={mnemonic:'연상문장 개선',image:'이미지 재제작',both:'연상문장 + 이미지 재제작',data:'발음·뜻 등 정보 재검수'};const flagNames={sound:'발음·강세 오류',awkward:'억지 한국어',meaning:'뜻 연결 오류',copyright:'표현·저작권 문제'};
+// 검증된 샘플 발음 데이터를 기준으로 음절-철자 대응을 제공한다.
+// 정식 사전 API 연동 전에는 미등록 단어의 강세를 자동 판정하지 않는다.
+const stressSegments={
+ 'idiot|명사':[[0,2,'id'],[2,5,'iot']],
+ 'immense|형용사':[[0,2,'im'],[2,7,'mense']],
+ 'impenetrable|형용사':[[0,2,'im'],[2,5,'pen'],[5,12,'etrable']],
+ 'rebel|명사':[[0,3,'reb'],[3,5,'el']],
+ 'rebel|동사':[[0,2,'re'],[2,5,'bel']],
+ 'allow|동사':[[0,2,'al'],[2,5,'low']],
+ 'belong|동사':[[0,2,'be'],[2,6,'long']],
+ 'abandon|동사':[[0,1,'a'],[1,4,'ban'],[4,7,'don']],
+ 'adapt|동사':[[0,1,'a'],[1,5,'dapt']],
+ 'admire|동사':[[0,2,'ad'],[2,6,'mire']],
+ 'approach|동사':[[0,2,'ap'],[2,8,'proach']],
+ 'benefit|명사':[[0,3,'ben'],[3,7,'efit']],
+ 'capture|동사':[[0,3,'cap'],[3,7,'ture']],
+ 'conceal|동사':[[0,3,'con'],[3,7,'ceal']],
+ 'discover|동사':[[0,3,'dis'],[3,6,'cov'],[6,8,'er']],
+ 'hesitate|동사':[[0,3,'hes'],[3,8,'itate']],
+ 'preserve|동사':[[0,3,'pre'],[3,8,'serve']]
+};
+const starterStress={
+ 'abandon|동사':[1,4], 'adapt|동사':[1,5], 'admire|동사':[2,6],
+ 'approach|동사':[2,8], 'benefit|명사':[0,3], 'capture|동사':[0,3],
+ 'conceal|동사':[3,7], 'discover|동사':[3,6],
+ 'hesitate|동사':[0,3], 'preserve|동사':[3,8]
+};
+function suggestedStress(c){
+ const key=String(c.word||'').toLowerCase()+'|'+c.pos;
+ const known=starterStress[key];
+ // Only repair the automatically inserted [0,1] on unpublished imported cards.
+ if(known && c.status!=='published' && Array.isArray(c.stress) && c.stress[0]===0 && c.stress[1]===1) return known;
+ return c.stress;
+}
+function previewCard(c){return {...c,stress:api.stressFor({...c,stress:suggestedStress(c)})}}
+function segmentUI(c){
+ const derived=api.stressMarkFor(c)||api.formatStressMark(c.word,api.stressFor(c));
+ return `<label class="field">강세 표시 <span class="small">(엑셀 값 우선 · 예: con[tam]inate)</span><input name="stressMark" value="${api.escape(derived)}" placeholder="예: con[tam]inate"></label><p class="small">대괄호 안 철자만 학생 화면에서 빨간색으로 표시합니다. 프로그램이 새 단어 강세를 추측하지 않습니다.</p>`;
+}
+
+function anchorResearchMarkup(c){
+ const r=c?.batchSuggestion?.anchorResearch;if(!r||!Array.isArray(r.anchors))return '';
+ const rows=r.anchors.map(a=>`<tr><td><b>${api.escape(a.anchor||'')}</b></td><td>${Number(a.coverage||0)}%</td><td>${a.verdict==='pass'?'<span class="tag published">통과</span>':'<span class="tag rejected">탈락</span>'}</td><td>${api.escape(a.meaningBridge||a.reason||'')}</td></tr>`).join('');
+ return `<details class="anchor-research" open><summary>발음 고리 연구 결과</summary><p class="small">연상문장을 만들기 전에 IPA와 실제 한국어 표현의 연결을 먼저 연구한 결과입니다.</p><div class="table-wrap"><table><thead><tr><th>고리</th><th>소리 범위</th><th>판정</th><th>뜻 연결</th></tr></thead><tbody>${rows||'<tr><td colspan="4">통과한 자연스러운 발음 고리를 찾지 못했습니다.</td></tr>'}</tbody></table></div><p class="small">${api.escape(r.researchSummary||'')}</p></details>`;
+}
+function reworkSection(c){const r=c.rework;if(!r)return '';
+const kind=workLabels[r.kind]||r.kind;
+const candidates=(r.candidates||['','','']).slice(0,3);
+const isMnemonic=r.kind==='mnemonic'||r.kind==='both';
+const isImage=r.kind==='image'||r.kind==='both'||r.kind==='mnemonic';
+const candidateItems=candidates.map((entry,i)=>{
+ const it=typeof entry==='object'&&entry?entry:{mnemonic:String(entry||''),scene:'',reason:'',anchor:'',quality:'',selfScores:{}};
+ return `<div class="ai-candidate"><label class="field">AI 후보 ${i+1}<textarea id="candidate${i}">${api.escape(it.mnemonic)}</textarea></label><label class="field">그림 장면<textarea id="candidateScene${i}">${api.escape(it.scene||'')}</textarea></label><p class="small">${it.anchor?'<b>소리 고리:</b> '+api.escape(it.anchor)+' · ':''}${api.escape(it.reason||'')} ${it.selfScores&&Object.keys(it.selfScores).length?'· 자체점수 '+Object.values(it.selfScores).reduce((x,y)=>x+(Number(y)||0),0)+'/100':''} ${it.quality==='weak'?'· <b>약함</b>':''}</p><button type="button" class="btn" data-usecandidate="${i}">후보 ${i+1} 선택</button></div>`;
+ }).join('');
+return `<section class="rework-card"><div class="row"><h3 style="margin:0">반려 후 AI 재작업</h3><span class="tag rejected">${api.escape(kind)}</span></div>
+<p class="small">반려 사유: ${api.escape(r.reason)}</p><p class="small">반려일: ${api.escape(r.date||'')}</p>
+<div class="notice">AI 버튼은 별도로 실행하는 <b>server.py</b>와 <b>OpenAI API 키</b>가 설정된 경우에만 작동합니다. 생성물은 자동 공개되지 않습니다. 각 생성 작업은 API 이용 요금이 발생할 수 있습니다.</div>
+<div class="row"><span id="aiState" class="small">AI 서버 확인 중…</span></div>
+<div class="controls"><button type="button" class="btn" id="copyRework">요청문 복사</button><button type="button" class="btn" id="downloadRework">TXT 저장</button></div>
+${isMnemonic?`${anchorResearchMarkup(c)}<h3>AI 연상문장 후보 3안 (글 · 그림 아이디어)</h3><p class="small">이 단계에서는 PNG 이미지를 만들지 않습니다. 3안을 비교하거나 관리자가 직접 작성할 수 있습니다. 모두 부적합하면 채택하지 말고 보류하세요.</p><button type="button" class="btn primary" id="generateCandidates">AI 후보 3안 생성</button><div id="candidateBox">${candidateItems}</div>
+<h3>관리자가 직접 연상문장 작성</h3><label class="field">직접 작성한 발음연상문장<textarea id="manualMnemonic" placeholder="AI 제안이 마음에 들지 않으면 자연스러운 연상문장을 입력하세요."></textarea></label><label class="field">직접 작성한 그림 장면<textarea id="manualScene" placeholder="한 컷에 표현할 행동과 상황을 입력하세요."></textarea></label><button type="button" class="btn primary" id="applyManual">직접 쓴 문장 적용</button>`:''}
+${isImage?`<h3>웹툰 이미지 자동 제작</h3><p class="notice">이미지는 별도 수동 단계 없이 <b>AI 자동 제작</b> 과정에서 생성되고 이미지 QA까지 거칩니다. 문제가 있으면 상단 최종 검수 카드에서 <b>다시 자동 제작</b>을 사용하세요.</p><p class="small">관리자는 단어·발음·뜻·최종 연상문장·최종 이미지만 확인한 뒤 공개 / 재생성 / 반려를 결정합니다.</p>`:''}
+${r.kind==='data'?'<p class="small">품사·뜻·IPA·강세를 신뢰할 수 있는 사전에서 직접 확인하세요. 이 유형은 자동 재검증하지 않습니다.</p>':''}
+<div class="divider"></div><button type="button" class="btn primary" id="restartDraft">재작업 후 초안으로 전환</button></section>`}
+
+async function verifyImagePaths(paths){
+ const unique=[...new Set(paths.filter(Boolean))];
+ if(!unique.length)return {};
+ const r=await fetch('/api/images/check',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paths:unique}),cache:'no-store'});
+ const result=await r.json();if(!r.ok)throw Error(result.error||'서버 이미지 확인 실패');
+ return result.results||{};
+}
+async function browserImageCheck(path){
+ return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(true);img.onerror=()=>resolve(false);img.src=path+(path.includes('?')?'&':'?')+'imgcheck='+Date.now();});
+}
+async function verifiedImage(path){
+ if(!path)return false;
+ const states=await verifyImagePaths([path]);
+ if(states[path]?.status==='invalid')return false;
+ if(states[path]?.status==='ok')return browserImageCheck(path);
+ if(OneCutCloud.enabled){try{const data=await OneCutCloud.request('/api/cloud/image-urls',{method:'POST',body:JSON.stringify({paths:[path]})});if(data.urls?.[path])return browserImageCheck(data.urls[path]);}catch{}}
+ return browserImageCheck(path);
+}
+async function auditAllImagePaths(){
+ const btn=$('imageAuditAll');const original=btn.textContent;btn.disabled=true;btn.textContent='검사 중…';
+ try{
+   const paths=cards.flatMap(c=>[c.sceneImage,...(c.sceneCandidates||[]).map(v=>v.path)]).filter(Boolean);
+   const state=await verifyImagePaths(paths);const checked={};
+   const unique=[...new Set(paths)];
+   await Promise.all(unique.map(async path=>{checked[path]=state[path]?.status==='ok'||state[path]?.status==='remote'?await browserImageCheck(path):false;}));
+   const bad=cards.filter(c=>c.sceneImage&&!checked[c.sceneImage]);
+   const missingCandidates=cards.flatMap(c=>(c.sceneCandidates||[]).filter(v=>v.path&&!checked[v.path]).map(v=>c.word+' ('+c.pos+'): 후보 '+v.path));
+   const report=[`검사 카드: ${cards.length}개 / 이미지 경로: ${unique.length}개`,`현재 장면 오류: ${bad.length}개`,`후보 이미지 오류: ${missingCandidates.length}개`,...bad.map(c=>c.word+' ('+c.pos+'): '+c.sceneImage),...missingCandidates];
+   alert(report.join('\n').slice(0,12000));
+ }catch(err){alert('전체 이미지 검사 실패: '+err.message)}finally{btn.disabled=false;btn.textContent=original}
+}
+function availableImageVersions(c){
+ const versions=[];
+ const hidden=new Set(c.hiddenSceneCandidates||[]);
+ const add=(path,mode,source='이전 장면',metadata={})=>{
+   if(!path||(hidden.has(path)&&path!==c.sceneImage)||versions.some(v=>v.path===path))return;
+   const explicit=(c.sceneCandidates||[]).find(x=>x.path===path)||{};
+   versions.push({path,mode:mode||'legacy-crop',source:explicit.source||source,
+     current:path===c.sceneImage,reviewStatus:explicit.reviewStatus||'pending',
+     rejectionReason:explicit.rejectionReason||'',date:explicit.date||metadata.date||''});
+ };
+ add(c.sceneImage,c.sceneImageMode,'현재 선택된 장면');
+ for(const v of [...(c.sceneCandidates||[])].reverse())add(v.path,v.mode,v.source||'새 시안');
+ for(const item of [...(c.history||[])].reverse()){
+   if(item.kind==='generated-image'||item.kind==='scene-selected'){
+     add(item.previousSceneImage,item.previousMode,'이전 사용본');
+     add(item.newImage,'clean','AI 이전 시안');
+   }
+ }
+ if(c.word==='idiot'&&c.pos==='명사'){
+   add('assets/samples/idiot_webtoon_v29.png','clean','웹툰 스타일 새 시안 v3.0 · 검수 전');
+   add('assets/samples/idiot_scene_square.png','legacy-crop','이전 비교 시안 · 구형 코믹');
+ }
+ return versions.slice(0,30);
+}
+function imageVersionMarkup(c){
+ const versions=availableImageVersions(c).filter(v=>!v.current);
+ if(!versions.length)return '<p class="small">선택된 장면은 위의 학습카드 미리보기에서 확인하세요. 다른 이미지 후보가 없습니다.</p>';
+ return `<div class="scene-compare">${versions.map((v,i)=>{
+ const rejected=v.reviewStatus==='rejected',legacy=v.mode==='legacy-crop';
+ const tag=v.current?'현재 사용 중':rejected?'반려된 시안':legacy?'임시 크롭 / 검수 불가':'검수 전 후보 (자동 공개 안 됨)';
+ return `<article class="scene-option ${rejected?'scene-rejected':''}">
+ ${!v.current?`<button type="button" class="scene-delete-x" data-delete-scene="${i}" aria-label="${api.escape(v.source)} 후보 목록에서 삭제" title="이 후보 목록에서 삭제 (원본 파일은 보존)">×</button>`:''}
+ <button type="button" class="scene-preview-open" data-preview-image="${i}" aria-label="이미지 후보 ${i+1} 확대 보기"><img src="${api.escape(v.path)}" alt="이미지 후보 ${i+1}" loading="lazy" onerror="this.hidden=true;this.insertAdjacentHTML('afterend','<span class=&quot;image-missing-notice&quot;>이미지 파일 없음</span>')"><span class="scene-preview-label">원본 확대 보기 ↗</span></button>
+ <div class="scene-option-foot"><strong>${api.escape(v.source)}</strong><span class="small">${api.escape(tag)}${v.date?' · '+api.escape(v.date.slice(0,10)):''}</span></div>
+ ${rejected?`<p class="candidate-reason">반려 사유: ${api.escape(v.rejectionReason)}</p>`:''}
+ ${v.current?'<span class="tag approved">현재 장면</span>':`<div class="candidate-actions"><button type="button" class="btn" data-restore-scene="${i}">${rejected?'재검토 후 선택':'이 시안 선택'}</button></div>`}
+ ${!v.current&&!rejected?`<button type="button" class="btn danger" data-reject-scene="${i}">이 후보 반려</button>`:''}
+ </article>`}).join('')}</div>`;
+}
+function openScenePreview(i){
+ const candidate=availableImageVersions(current()).filter(v=>!v.current)[i];if(!candidate)return;
+ const dialog=document.getElementById('sceneLightbox');
+ const img=document.getElementById('sceneLightboxImage');
+ // 썸네일이 이미 정상 표시 중이면 브라우저가 해석한 실제 URL(currentSrc)을 그대로 사용한다.
+ // Supabase/상대경로가 저장된 원본 문자열과 확대창에서의 URL 해석 차이로 깨지는 문제를 방지한다.
+ const thumb=document.querySelector(`[data-preview-image="${i}"] img`);
+ const resolved=(thumb && (thumb.currentSrc||thumb.src)) || (()=>{try{return new URL(candidate.path,document.baseURI).href}catch{return candidate.path}})();
+ img.onerror=()=>{img.onerror=null;img.removeAttribute('src');img.alt='확대 이미지를 불러오지 못했습니다. 썸네일을 새로고침한 뒤 다시 시도해 주세요.'};
+ img.src=resolved;img.alt=(candidate.source||'이미지 후보')+' 확대 이미지';
+ document.getElementById('sceneLightboxLabel').textContent=candidate.source||'장면 이미지 확대';
+ if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+}
+function closeScenePreview(){const dialog=document.getElementById('sceneLightbox');if(dialog.open&&dialog.close)dialog.close();else dialog.removeAttribute('open')}
+async function checkRunningServer(){
+ const el=document.getElementById('serverCheck');if(!el)return;
+ try{
+  const response=await fetch('/api/health',{cache:'no-store'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const d=await response.json();if(!String(d.server||'').startsWith('onecut-'))throw new Error('예상과 다른 서버 응답');
+  el.textContent=`AI 서버 접속 정상 · ${d.server} · API 키 ${d.ai_key_set?'등록됨':'미설정'} · Supabase ${d.cloud_configured?'설정됨':'미설정'}`;el.classList.add('ok');
+ }catch(err){el.textContent='서버 확인 실패: 이전 버전 또는 정적 서버가 실행 중일 수 있습니다. 기존 CMD에서 Ctrl+C로 종료 후, v3.4.6 폴더에서 python server.py를 실행하세요. ('+err.message+')';el.classList.add('warning')}
+}
+function reviewHistoryMarkup(c){
+ const entries=[...(c.history||[])].reverse().slice(0,30);
+ if(!entries.length)return '<p class="small">아직 기록된 검수·선택 이력이 없습니다.</p>';
+ const names={'scene-candidate-deleted':'이미지 후보 목록 삭제','scene-candidate-rejected':'이미지 후보 반려','scene-selected':'이미지 후보 채택','generated-image':'AI 후보 생성','image-uploaded':'이미지 업로드','admin-approved':'최종 승인','student-published':'학생용 공개','student-unpublished':'공개 중단','rework-start':'재작업 시작'};
+ return `<ol class="review-timeline">${entries.map(h=>`<li><b>${api.escape(names[h.kind]||h.kind||h.status||'검수 이력')}</b> <time>${api.escape(h.date?new Date(h.date).toLocaleString('ko-KR'):'')}</time><div class="small">${api.escape(h.reason||h.newImage||h.image||'')}</div></li>`).join('')}</ol>`;
+}
+function beginRework(kind){
+ const c=current();if(!c)return;const v=formData();
+ if(!unchanged(c,v))return alert('현재 화면 내용은 작업 실행 시 자동 저장됩니다.');
+ if(!confirm((kind==='image'?'기존 연상문장 그대로 장면 이미지를 새로 제작':'새 발음연상 3안을 요청')+'할 수 있는 재작업 상태로 전환할까요? 승인·공개는 해제됩니다.'))return;
+ c.history=Array.isArray(c.history)?c.history:[];
+ c.history.push({date:new Date().toISOString(),kind:'rework-start',status:c.status});
+ c.rework={kind,reason:'관리자가 직접 재작업 요청',date:new Date().toLocaleString('ko-KR'),candidates:['','',''],mnemonicApproved:kind==='image'};
+ c.status='rejected';c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;write();
+}
+function requestText(c,imageOnly=false){const r=c.rework||{};const headline=`단어 ${c.word} (${c.pos}) / IPA ${c.ipa} / 뜻 ${c.meaning} / 한글발음 ${c.hangul}`;
+const common=`반려 사유: ${r.reason||c.notes||'미기재'}\n기존 연상: ${c.mnemonic||'미작성'}\n기존 장면: ${c.scene||'미작성'}\n\n제작 원칙: 영어 발음과 한국어 표현이 실제로 비슷해야 하며, 한국어가 자연스럽고 뜻과 직접 이어져야 한다. 억지 발음 분해 금지. 그림은 1:1, 흰 배경, 한 컷, 한두 개 말풍선, 불필요한 장식 금지. IPA/강세는 사전 대조. 기존 외부 교재의 표현·그림을 복제하지 말 것.`;
+if(imageOnly||r.kind==='image')return `[한컷영단어 이미지 재제작 요청]\n${headline}\n${common}\n\n연상문장은 반드시 유지하고, 반려된 이미지 표현만 고쳐라. 영어 단어·IPA·뜻·강세·하단 문구는 앱에서 별도 표시하니 그림에 절대 넣지 말고 장면만 표현하라. 최종 승인은 관리자가 한다.`;
+if(r.kind==='data')return `[한컷영단어 정보 재검수 요청]\n${headline}\n${common}\n\n발음·뜻·품사별 IPA·주강세와 영어 철자 표시 범위를 신뢰할 수 있는 사전을 이용해 검토하고 불확실하면 표시하라.`;
+return `[한컷영단어 발음연상 재작업 요청]\n${headline}\n${common}\n\n기존 문장의 문제를 반영해 자연스러운 한국어 발음연상 3개를 제안하라. 각 안마다 짧은 한 컷 장면과 의미 연결 근거를 제시하고, 좋은 안이 없으면 억지로 만들지 말고 보류하라.${r.kind==='both'?' 채택된 문장이 승인된 뒤에만 새 이미지를 제작한다.':''}`;}
+function downloadText(name,body){const b=new Blob([body],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function rejectFlow(c){const kind=prompt('반려 유형을 입력하세요.\n1 = 연상문장\n2 = 이미지만\n3 = 연상문장 + 이미지\n4 = 발음·뜻 정보', '1');if(kind===null)return;const key=({1:'mnemonic',2:'image',3:'both',4:'data'})[kind.trim()];if(!key)return alert('1~4 중에서 선택해주세요.');const reason=prompt('반려 사유를 구체적으로 입력하세요. (취소하면 반려하지 않음)',c.rework?.reason||'');if(reason===null)return;if(!reason.trim())return alert('반려 사유는 필수입니다.');if(!confirm(`${workLabels[key]} 사유로 반려하고 학생용 공개를 중단할까요?`))return;
+c.history=Array.isArray(c.history)?c.history:[];c.history.push({date:new Date().toISOString(),status:c.status,reason:reason.trim(),kind:key,mnemonic:c.mnemonic,scene:c.scene,image:c.image});c.rework={kind:key,reason:reason.trim(),date:new Date().toLocaleString('ko-KR'),candidates:['','',''],mnemonicApproved:key==='image'};c.status='rejected';c.notes=reason.trim();c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;write();}
+function restartDraft(){const c=current();if(!c?.rework)return;const changed=formData();if(!unchanged(c,changed))return alert('먼저 ‘임시 저장’을 눌러 변경 내용을 반영해 주세요.');if(!confirm('초안으로 전환하고 다시 검수를 시작할까요?'))return;c.status='draft';c.rework=null;c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;write()}
+function current(){return cards.find(x=>x.id===selected)}
+let cloudSaving=false;
+async function write(options={}){
+ if(OneCutCloud.enabled){
+  if(cloudSaving){
+   const message='이전 저장이 아직 진행 중입니다. 완료 후 다시 시도해 주세요.';
+   showCloudState(message);return false;
+  }
+  cloudSaving=true;
+  showCloudState('클라우드 저장 중…');
+  try{
+   await OneCutCloud.save(cards);
+   if(!options.skipRender)render();
+   showCloudState('클라우드 저장 완료 · '+new Date().toLocaleTimeString('ko-KR'));
+   return true;
+  }catch(err){
+   showCloudState('저장 실패: '+err.message);
+   alert('클라우드 저장 실패: '+err.message+'\n저장 여부를 확인하기 전에는 재시도하지 마세요.');
+   return false;
+  }finally{cloudSaving=false}
+ }else{
+  api.save(cards);
+  if(!options.skipRender)render();
+  return true;
+ }
+}
+function refresh(){cards=api.load();render()}
+function showCloudState(msg){const el=$('cloudState');if(el)el.textContent=msg}
+
+
+function productionStage(c){
+ // The administrator decides quality; numerical AI scores and historical rejection flags
+ // should not automatically send a previously published card back to the draft stage.
+ if(c.status==='published')return {type:'published',title:'학생용 공개 완료',rank:5};
+ if(c.status==='rejected')return {type:'rejected',title:'보류 사유 확인 · 재작업',rank:4};
+ if(!String(c.mnemonic||'').trim()||!String(c.scene||'').trim())return {type:'mnemonic',title:'연상문장·장면 만들기',rank:1};
+ if(!String(c.sceneImage||'').trim()||c.sceneImageMode!=='clean')return {type:'image',title:'이미지 자동 재생성 필요',rank:2};
+ return {type:'review',title:'발음·이미지 확인 후 공개',rank:3};
+}
+function queueIssue(c){
+ const info=c?.batchSuggestion||{};
+ if(c.status==='rejected')return {code:'rejected',label:'관리자 반려',severity:5};
+ if(info.imageError)return {code:'image_error',label:'이미지 생성 실패',severity:5};
+ if(info.imageReview?.passed===false)return {code:'image_qa',label:'이미지 QA 미통과',severity:5};
+ if(info.vetoReason)return {code:'veto',label:'연상 반대검증 미통과',severity:4};
+ if(info.score==null && info.attemptCount)return {code:'mnemonic_quality',label:'연상 품질 미달',severity:4};
+ if(c.sceneImage && !c.imageChecked)return {code:'human_image',label:'이미지 관리자 확인 필요',severity:3};
+ if(c.mnemonic && !c.sourceChecked)return {code:'human_source',label:'발음·뜻 관리자 확인 필요',severity:3};
+ if(!c.mnemonic||!c.scene)return {code:'mnemonic_missing',label:'연상 제작 필요',severity:2};
+ if(!c.sceneImage)return {code:'image_missing',label:'이미지 제작 필요',severity:2};
+ return {code:'ready',label:'공개 직전 확인',severity:1};
+}
+function queuePriority(c,stage){
+ const issue=queueIssue(c);
+ if(c.status==='published')return {score:0,label:'완료',issue};
+ const base=issue.severity*20;
+ const qa=Number(c.batchSuggestion?.imageReview?.total??100);
+ const quality=Number(c.batchSuggestion?.score??(c.evaluation?api.score(c):100));
+ const penalty=(quality<85?8:0)+(qa<85?8:0);
+ const score=Math.min(99,base+penalty+(stage.type==='review'?7:0));
+ return {score,label:score>=90?'긴급':score>=70?'높음':score>=45?'보통':'낮음',issue};
+}
+function queueList(){return cards.map(c=>{const stage=productionStage(c),priority=queuePriority(c,stage);return {c,...stage,priority};}).sort((a,b)=>b.priority.score-a.priority.score||a.rank-b.rank||String(a.c.word).localeCompare(String(b.c.word),'en'));}
+function renderQueue(){
+ const list=queueList(),filter=$('queueFilter')?.value||'all';
+ const counts={mnemonic:0,image:0,review:0,rejected:0,published:0};list.forEach(x=>counts[x.type]++);
+ $('queueSummary').innerHTML=`<span>연상 준비 <b>${counts.mnemonic}</b></span><span>이미지 준비 <b>${counts.image}</b></span><span>공개 전 확인 <b>${counts.review}</b></span><span>보류 <b>${counts.rejected}</b></span><span>공개 <b>${counts.published}</b></span>`;
+ $('queueRows').innerHTML=list.filter(x=>filter==='all'||filter===x.type).map(({c,title,priority})=>{const retry=priority.issue.severity>=4||['image_error','image_qa','veto','mnemonic_quality'].includes(priority.issue.code);return `<tr><td><b>${api.escape(priority.label)}</b><small>${priority.score}</small></td><td><strong>${api.escape(c.word)}</strong><small>${api.escape(c.pos)}</small></td><td><span class="tag ${api.escape(c.status)}">${api.escape(labels[c.status]||c.status)}</span></td><td>${api.escape(title)}<small>${api.escape(priority.issue.label)}</small></td><td>${c.evaluation?api.score(c)+'/100':(c.batchSuggestion?.score!=null?c.batchSuggestion.score+'/100':'미평가')}</td><td><div class="controls"><button type="button" class="btn" data-queue-id="${api.escape(c.id)}">열기</button>${retry?`<button type="button" class="btn" data-queue-retry="${api.escape(c.id)}">재처리</button>`:''}</div></td></tr>`;}).join('')||'<tr><td colspan="6" class="muted">이 단계의 단어가 없습니다.</td></tr>';
+ $('queueNext').disabled=!list.some(x=>x.rank<4);
+}
+function exportQueueCSV(){
+ const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const rows=[['단어','품사','상태','다음 작업','점수','사람 발음 검수','이미지 검수','선택 이미지','비고'],...queueList().map(({c,title})=>[c.word,c.pos,labels[c.status]||c.status,title,api.score(c),c.sourceChecked?'완료':'필요',c.imageChecked?'완료':'필요',c.sceneImage||'',c.notes||''])];
+ const body='\uFEFF'+rows.map(r=>r.map(quote).join(',')).join('\r\n');
+ const blob=new Blob([body],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='onecut_production_queue_v4_1.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+$('queueFilter').addEventListener('change',renderQueue);
+$('queueNext').addEventListener('click',()=>{const next=queueList().find(x=>x.rank<4);if(!next){alert('현재 미완료 초안이 없습니다.');return;}selected=next.c.id;$('cardStatusFilter').value='all';$('q').value='';render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});});
+$('cardStatusFilter').addEventListener('change',render);
+$('queueExport').addEventListener('click',exportQueueCSV);
+$('queueRows').addEventListener('click',async e=>{
+ const retry=e.target.closest('[data-queue-retry]');
+ if(retry){const c=cards.find(x=>x.id===retry.dataset.queueRetry);if(!c)return;await recordResearchFeedback(c,'failure','운영 대기열에서 재처리 선택');chooseQuickMode('retry');batchState.selectedIds=new Set([c.id]);$('batchLimit').value='1';await batchRun('auto');return;}
+ const btn=e.target.closest('[data-queue-id]');if(!btn)return;selected=btn.dataset.queueId;render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+// v4.6.1: beta readiness report. Read-only: never writes cards or changes publication state.
+let lastReleaseAudit=[];
+function releaseAuditCard(c){
+ const missing=[];const guidance=[];
+ const req=[['word','영단어'],['pos','품사'],['ipa','IPA'],['meaning','뜻'],['mnemonic','발음연상'],['scene','장면 설명'],['example','영어 예문'],['translation','예문 해석']];
+ for(const [key,label] of req)if(!String(c[key]||'').trim())missing.push(label+' 없음');
+ const st=c.stress,w=String(c.word||'');
+ if(!Array.isArray(st)||st.length!==2||!Number.isInteger(st[0])||!Number.isInteger(st[1])||st[0]<0||st[1]<=st[0]||st[1]>w.length)missing.push('강세 범위 확인');
+ if(!String(c.sceneImage||'').trim()||c.sceneImageMode!=='clean')missing.push('최종 웹툰 장면 없음');
+ if(!c.sourceChecked)guidance.push('발음·연상 사람 확인 권장');
+ if(!c.imageChecked)guidance.push('이미지 사람 확인 권장');
+ if(c.speechRequired&&!c.sceneSpeech?.trim())missing.push('필수 말풍선 문장 없음');
+ else if(c.speechRequired&&!c.speechChecked)guidance.push('말풍선 내용 확인 권장');
+ if(c.flags?.length)guidance.push('이전 품질 플래그 확인');
+ if(c.evaluation&&api.score(c)<85)guidance.push('AI 평가 점수 재검토');
+ return {id:c.id,word:c.word,pos:c.pos,status:c.status,missing,guidance,imagePath:c.sceneImage||'',imageStatus:'검사 전'};
+}
+function releaseCsv(rows){
+ const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+ const header=['단어','품사','상태','필수 항목 문제','권고 사항','이미지 파일 검사','이미지 경로'];
+ const data=[header,...rows.map(r=>[r.word,r.pos,labels[r.status]||r.status,r.missing.join(' / '),r.guidance.join(' / '),r.imageStatus,r.imagePath])];
+ const blob=new Blob(['\uFEFF'+data.map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+ const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='onecut_release_audit_v4_2.csv';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1500);
+}
+function renderReleaseAudit(){
+ const data=lastReleaseAudit;
+ const published=data.filter(x=>x.status==='published');
+ const blocked=published.filter(x=>x.missing.length||x.imageStatus==='파일 없음'||x.imageStatus==='경로 오류');
+ const ready=published.filter(x=>!x.missing.length&&x.imageStatus!=='파일 없음'&&x.imageStatus!=='경로 오류');
+ const unpublished=data.length-published.length;
+ $('releaseAuditSummary').textContent=`전체 ${data.length}개 · 공개 ${published.length}개 · 공개 카드 중 필수항목/경로 확인 필요 ${blocked.length}개 · 공개 카드 기본정보 통과 ${ready.length}개 · 미공개 ${unpublished}개 (이미지 접근·내용 품질은 별도 확인)`;
+ $('releaseAuditRows').innerHTML=data.map(r=>`<tr><td><b>${api.escape(r.word||'(미입력)')}</b><small>${api.escape(r.pos||'')}</small></td><td><span class="tag ${api.escape(r.status)}">${api.escape(labels[r.status]||r.status)}</span></td><td>${r.missing.length?api.escape(r.missing.join(' / ')):'기본정보 통과'}</td><td>${api.escape([r.imageStatus,...r.guidance].filter(Boolean).join(' / ')||'없음')}</td><td><button type="button" class="btn" data-audit-id="${api.escape(r.id)}">수정</button></td></tr>`).join('')||'<tr><td colspan="5">단어가 없습니다.</td></tr>';
+ $('releaseAuditWrap').hidden=false;$('exportReleaseAudit').disabled=false;
+}
+$('runReleaseAudit').addEventListener('click',async()=>{
+ const button=$('runReleaseAudit');button.disabled=true;button.textContent='검사 중…';
+ try{
+  lastReleaseAudit=cards.map(releaseAuditCard);
+  const paths=[...new Set(lastReleaseAudit.map(x=>x.imagePath).filter(Boolean))];
+  if(paths.length){
+   let states={};try{states=await verifyImagePaths(paths)}catch{ /* local test may be unavailable; preserve unknown */ }
+   let remote={};
+   const needsRemote=paths.filter(p=>states[p]?.status==='missing'||states[p]?.status==='remote');
+   if(needsRemote.length&&OneCutCloud.enabled&&OneCutCloud.token){
+    try{const r=await OneCutCloud.request('/api/cloud/image-urls',{method:'POST',body:JSON.stringify({paths:needsRemote})});remote=r.urls||{}}catch{}
+   }
+   for(const row of lastReleaseAudit){
+    if(!row.imagePath){row.imageStatus='이미지 미선택';continue}
+    const state=states[row.imagePath]?.status;
+    if(state==='ok')row.imageStatus='로컬 파일 확인';
+    else if(remote[row.imagePath])row.imageStatus='클라우드 URL 발급 확인 (실제 표시 미검증)';
+    else if(state==='invalid')row.imageStatus='경로 오류';
+    else if(state==='missing'&&!OneCutCloud.enabled)row.imageStatus='파일 없음';
+    else row.imageStatus='이미지 접근 확인 필요';
+   }
+  } else lastReleaseAudit.forEach(r=>r.imageStatus='이미지 미선택');
+  lastReleaseAudit.sort((a,b)=>Number(b.status==='published')-Number(a.status==='published')||b.missing.length-a.missing.length||a.word.localeCompare(b.word));
+  renderReleaseAudit();
+ }catch(err){$('releaseAuditSummary').textContent='진단 실패: '+err.message}
+ finally{button.disabled=false;button.textContent='전체 단어 진단'}
+});
+$('exportReleaseAudit').addEventListener('click',()=>{if(lastReleaseAudit.length)releaseCsv(lastReleaseAudit)});
+$('releaseAuditRows').addEventListener('click',e=>{
+ const b=e.target.closest('[data-audit-id]');if(!b)return;selected=b.dataset.auditId;
+ $('cardStatusFilter').value='all';$('q').value='';render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+function render(){if(typeof excelRefreshPending==='function')excelRefreshPending();renderQueue();renderSavedBatchResults();if(!batchState.running){renderBatchSelection();} const q=$('q').value.toLowerCase(),statusFilter=$('cardStatusFilter').value;$('list').innerHTML=cards.filter(c=>(c.word+' '+c.meaning).toLowerCase().includes(q)&&(statusFilter==='all'||(statusFilter==='draft'?['draft','review','approved'].includes(c.status):c.status===statusFilter))).map(c=>`<button class="listbutton ${selected===c.id?'active':''}" data-id="${api.escape(c.id)}"><span><b>${api.escape(c.word)}</b><small>${api.escape(c.pos)} · ${api.escape(c.meaning)}</small></span><span class="tag ${c.status}">${labels[c.status]||c.status}</span></button>`).join('')||'<div class="blank">일치하는 단어가 없습니다.</div>';$('count').textContent=`전체 ${cards.length}개`;$('stats').innerHTML=`<span class="notice">공개 <b>${cards.filter(c=>c.status==='published').length}</b>개 · 승인 ${cards.filter(c=>c.status==='approved').length}개 · 검수 대기 ${cards.filter(c=>c.status==='draft'||c.status==='review').length}개 · 보류 ${cards.filter(c=>c.status==='rejected').length}개</span>`;
+let c=current();if(!c){$('editor').innerHTML='<div class="blank">단어를 추가하세요.</div>';return}const value=k=>api.escape(c[k]??''), inp=(k,label)=>`<label class="field">${label}<input name="${k}" value="${value(k)}"></label>`,textarea=(k,label)=>`<label class="field">${label}<textarea name="${k}">${value(k)}</textarea></label>`;
+$('editor').innerHTML=`<div class="row"><h2 style="margin:0">${api.escape(c.word)} <span class="muted">${api.escape(c.pos)}</span></h2><span class="tag ${c.status}">${labels[c.status]||c.status}</span></div><p class="small">수정 내용은 이미지 재제작·승인 및 공개를 누를 때 자동 저장됩니다. 별도 임시 저장 단계는 없습니다.</p><form id="form"><div class="two">${inp('word','단어')}${inp('pos','품사')}</div><div class="two">${inp('ipa','IPA')}${inp('hangul','한글 발음')}</div><div class="two">${inp('meaning','뜻')}${inp('image','기존 포스터 경로 (원본 보관)')}</div>${inp('sceneImage','장면 전용 이미지 경로 (카드 표시용)')}<label class="check"><input name="sceneImageClean" type="checkbox" ${c.sceneImageMode==='clean'?'checked':''}>장면 이미지를 확인했으며 그림 속에 단어·강세·IPA·뜻·요약문구가 포함되지 않음 (임시 크롭은 체크 금지)</label>${segmentUI(c)}${textarea('mnemonic','한국어 발음연상 · 최종 문장')}${textarea('scene','한 컷 웹툰 장면 설명')}${textarea('sceneSpeech','말풍선 문구 · 이미지에 반드시 표시')}<p class="small">말풍선을 수정한 뒤 <b>현재 문장으로 이미지 재제작</b>을 누르면 현재 연상문장·장면·말풍선이 자동 저장되어 새 이미지에 그대로 반영됩니다.</p><div class="two">${textarea('example','영어 예문')}${textarea('translation','예문 해석')}</div>${textarea('notes','검수 메모')}${reworkSection(c)}<div class="divider"></div><details class="advanced-review"><summary>상세 평가·검수 (필요할 때만)</summary><div class="row"><h3>연상 품질 평가</h3><b>${c.evaluation?api.score(c)+' / 100점':'평가 전'}</b></div><div class="scorebar"><i style="width:${c.evaluation?api.score(c):0}%"></i></div><div class="notice" style="margin:10px 0"><b>품질평가 출처:</b> ${c.evaluation?.status==='ai'?'AI 평가 완료 · '+api.escape(c.evaluation.model||''):c.evaluation?.status==='manual'?'관리자 사유 입력 평가':'기존 샘플 점수 · AI 평가 전 (참고)'}<br><span class="small">AI 평가 결과는 권고이며 실제 발음 사전 대조와 최종 사람 검수가 필요합니다.</span></div><div class="controls"><button type="button" class="btn primary" id="evaluateAI">AI로 100점 자동평가</button><button type="button" class="btn" id="manualEvaluate">관리자 수동 평가 확정</button></div><p class="small" id="evaluationReasons">${c.evaluation?.reasons?.map((v,i)=>`${['발음','자연스러움','뜻 연결','장면'][i]}: ${api.escape(v)}`).join('<br>')||'평가 근거 없음'}</p><div class="two" style="margin-top:12px">${[['발음 유사성',30],['한국어 자연스러움',25],['뜻과 연결',25],['그림 표현력',20]].map(([s,max],i)=>`<label class="field">${s} / ${max}<input type="number" name="score${i}" min="0" max="${max}" value="${Number(c.scores?.[i]||0)}"></label>`).join('')}</div><h3>품질 주의사항 (관리자 최종 확인 시 공개 가능)</h3>${Object.entries(flagNames).map(([k,v])=>`<label class="check"><input name="flag_${k}" type="checkbox" ${c.flags?.includes(k)?'checked':''}>${v}</label>`).join('')}<div class="divider"></div><h3>사람이 직접 확인할 항목</h3><label class="check"><input name="sourceChecked" type="checkbox" ${c.sourceChecked?'checked':''}>품사별 발음·강세·뜻·예문을 사전과 대조하고 자연스러운 연상임을 확인함</label><label class="check"><input name="imageChecked" type="checkbox" ${c.imageChecked?'checked':''}>그림을 실제로 열어 연상 일치·한글 오탈자·사용권한을 검수함</label><label class="check"><input name="speechRequired" type="checkbox" ${c.speechRequired?'checked':''}>이 장면에는 핵심 말풍선이 필요함</label><p class="small">말풍선 문구는 위 기본 편집란에서 수정합니다.</p><label class="check"><input name="speechChecked" type="checkbox" ${c.speechChecked?'checked':''}>선택한 실제 이미지 안에서 핵심 대사의 말풍선·오탈자를 직접 확인함</label><div class="notice warnbox">단어·강세·IPA·뜻·연상은 이미지와 분리되어 렌더링됩니다. 기존 포스터 임시 크롭은 미검수 참고용입니다.</div><h3>공개 전 검수 현황</h3><div class="notice"><b>자동 점검</b><div id="auditChecklist" class="validation-list">${api.audit(c).length?api.audit(c).map(x=>`• ${api.escape(x)}`).join(`<br>`):`조건 충족 · 관리자가 승인 및 공개를 결정`}</div></div></details><h3>학생에게 보일 카드 미리보기</h3><div id="liveCardPreview">${api.cardMarkup(previewCard(c))}</div><section class="image-history"><h3>다른 이미지 후보</h3><p class="small">선택된 이미지는 위 학습카드에 한 번만 표시됩니다. 다른 시안으로 바꾸면 기존 후보도 X로 정리할 수 있습니다.</p><p class="notice">새 웹툰 이미지는 검수 전 후보로 등록됩니다. 기존 장면은 자동으로 덮어쓰지 않으며, 관리자 선택과 사람 검수가 필요합니다.</p><p class="small">새 시안은 먼저 후보로 저장되며 현재 그림을 자동 교체하지 않습니다. 기존·새 그림을 비교한 뒤 관리자가 선택하고 재검수합니다. 후보 우측 상단 X는 목록에서만 삭제하며 원본 파일은 보존합니다.</p><div id="versionList">${imageVersionMarkup(c)}</div><details class="image-inspection"><summary>장면 검수 기준 · 원본 확인</summary><h3>장면 검수 기준</h3><p class="small">선택된 원본 이미지는 크롭 없이 확인하세요. 말풍선·간판이 잘리지 않아야 하고, 장면 내 영어 단어·IPA·뜻은 없어야 합니다.</p><div class="inspection-bullets"><span>① 모바일에서 가독성</span><span>② 자연스러운 웹툰 인물</span><span>③ 연상 핵심 소품 유지</span><span>④ 불필요한 장식·나뭇잎 없음</span></div>${c.sceneImage?`<a href="${api.escape(c.sceneImage)}" target="_blank" rel="noopener" class="btn">선택된 장면 원본 크기로 열기</a>`:'<p class="small">선택된 장면이 없습니다.</p>'}<p class="small">이미지 크기와 화면 잘림을 직접 확인하고 이미지 검수 체크를 완료하세요. 자동 검사는 합격을 보증하지 않습니다.</p></div></details><details class="review-records"><summary>제작·선택 이력</summary><h3 style="margin-top:20px">검수·선택 이력</h3><div id="reviewHistory">${reviewHistoryMarkup(c)}</div></details><label class="field" style="margin-top:14px">완성한 장면 그림을 직접 등록 (PNG/JPG/WebP, 8MB 이하)<input type="file" id="sceneUpload" accept="image/png,image/jpeg,image/webp"></label><p class="small">업로드는 새 후보로만 등록되며 자동 선택·승인·공개되지 않습니다. 사진·이미지 사용권한을 확인하세요.</p></section><div class="controls"><button type="button" class="btn" id="beginMnemonicRework">AI 연상 3안 새로 요청</button><button type="button" class="btn" id="beginImageRework">현재 문장으로 이미지 재제작</button></div><p class="notice" id="imageReworkStatus" role="status" aria-live="polite" style="display:none;margin-top:10px"></p>${c.image?`<details class="legacy-reference"><summary>기존 포스터 원본 보기 (강세 표기 참고 금지)</summary><img src="${api.escape(c.image)}" alt="구버전 포스터"></details>`:''}<div class="controls" style="margin-top:20px"><button type="button" class="btn primary" id="publishNow">승인 및 공개</button><button type="button" class="btn danger" id="reject">반려</button><button type="button" class="btn warn" id="unpublish" ${c.status==='published'?'':'disabled title="공개 상태인 단어에서만 사용"'}>공개 중단</button></div></form><p class="small" id="result" aria-live="polite"></p>`;
+$('evaluateAI').onclick=async()=>{
+ const before=current(),data=formData();if(!before||!data)return;
+ const btn=$('evaluateAI');const snap=JSON.stringify([data.word,data.pos,data.ipa,data.hangul,data.meaning,data.mnemonic,data.scene,data.sceneSpeech,data.speechRequired]);
+ await aiAction(btn,'/api/evaluate',payload(data),result=>{
+   const now=formData();if(!now||JSON.stringify([now.word,now.pos,now.ipa,now.hangul,now.meaning,now.mnemonic,now.scene,now.sceneSpeech,now.speechRequired])!==snap)return alert('평가 도중 문장이 변경되었습니다. 다시 평가하세요.');
+   Object.assign(before,now);
+   before.scores=result.scores;
+   before.evaluation={status:'ai',model:result.model,reasons:result.reasons,summary:result.summary,date:new Date().toISOString()};
+   if(result.unnatural&&!before.flags.includes('awkward'))before.flags.push('awkward');
+   if(result.soundCheckNeeded&&!before.flags.includes('sound'))before.flags.push('sound');
+   if(result.speechBubbleRequired){before.speechRequired=true;if(!before.sceneSpeech)before.sceneSpeech=result.suggestedSpeech;before.speechChecked=false;}
+   before.status=before.status==='rejected'?'rejected':'draft';before.sourceChecked=false;before.imageChecked=false;
+   write();alert(`AI 품질평가: ${result.scores.reduce((a,b)=>a+b,0)}점\n\n${result.summary}\n\n발음 사전 대조와 실제 그림의 말풍선 확인은 사람이 진행해야 합니다.`);
+ });
+};
+$('manualEvaluate').onclick=()=>{
+ const c=current(),v=formData();if(!v)return;
+ const why=prompt('관리자가 점수를 직접 판단한 구체적인 근거를 입력해 주세요. (필수)');if(!why?.trim())return;
+ Object.assign(c,v);c.evaluation={status:'manual',reasons:[why.trim()],summary:'관리자 수동 평가',date:new Date().toISOString()};
+ c.status=c.status==='rejected'?'rejected':'draft';c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;
+ write();
+};
+$('form').addEventListener('input',()=>{const v=formData();if(v){const preview=$('liveCardPreview');if(preview){preview.innerHTML=api.cardMarkup(v);void hydrateCloudImages();}const chk=$('auditChecklist');if(chk)chk.innerHTML=api.audit(v).length?api.audit(v).map(x=>'• '+api.escape(x)).join('<br>'):'조건 충족 · 관리자가 승인 및 공개를 결정';}});
+$('form').onsubmit=e=>{e.preventDefault();save();};$('publishNow').onclick=publishNow;$('unpublish').onclick=()=>transition('draft');$('reject').onclick=()=>rejectFlow(c);if($('copyRework'))$('copyRework').onclick=()=>navigator.clipboard.writeText(requestText(c)).then(()=>alert('재작업 요청문을 복사했습니다.')).catch(()=>alert('복사 권한이 없어 TXT 저장 기능을 이용하세요.'));if($('downloadRework'))$('downloadRework').onclick=()=>downloadText(`rework_${c.word}_${c.pos}.txt`,requestText(c));if($('copyImagePrompt'))$('copyImagePrompt').onclick=()=>navigator.clipboard.writeText(requestText(c,true)).then(()=>alert('이미지 요청문을 복사했습니다.')).catch(()=>alert('복사 실패: TXT 저장을 이용하세요.'));if($('restartDraft'))$('restartDraft').onclick=restartDraft;if($('generateCandidates'))$('generateCandidates').onclick=async()=>{
+ const c=current();const b=$('generateCandidates');
+ await aiAction(b,'/api/mnemonics',{...payload(c)},result=>{c.rework.candidates=result.candidates;c.rework.mnemonicApproved=false;write();alert('AI 연상 후보 3개가 도착했습니다. 각 후보의 발음 유사성과 뜻 연결성을 직접 검수해 주세요.');});
+};
+async function updateRejected(c,word,scene){if(!word.trim()||!scene.trim())return alert('연상문장과 한 컷 장면을 모두 입력해 주세요.');
+ const f=$('form');const v=formData();const prior=c.mnemonic;const previous=JSON.parse(JSON.stringify(c));
+ Object.assign(c,v);c.mnemonic=word.trim();c.scene=scene.trim();
+ if(c.mnemonic!==prior||c.rework.kind==='both'||c.rework.kind==='mnemonic'){c.sceneImage='';c.sceneImageMode='legacy-crop';}
+ c.status=c.status==='rejected'?'rejected':'draft';c.evaluation=null;c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;c.rework.mnemonicApproved=false;
+ const saved=await write();if(!saved){Object.assign(c,previous);return;}alert('연상·장면을 저장했습니다. 자동 제작을 다시 실행하면 이미지 생성·QA까지 이어집니다.');}
+ document.querySelectorAll('[data-usecandidate]').forEach(btn=>btn.onclick=()=>{
+ const i=Number(btn.dataset.usecandidate);const c=current();const word=$('candidate'+i).value;const scene=$('candidateScene'+i).value;
+ updateRejected(c,word,scene);
+ });
+ if($('applyManual'))$('applyManual').onclick=()=>{
+ const c=current();updateRejected(c,$('manualMnemonic').value,$('manualScene').value);
+ };
+ if($('approveMnemonic'))$('approveMnemonic').onclick=async()=>{
+ const c=current(),v=formData();if(!v.mnemonic||!v.scene)return alert('연상문장과 그림 장면이 필요합니다.');
+ if(v.mnemonic!==c.mnemonic||v.scene!==c.scene)return alert('변경된 내용이 있습니다. 현재 화면 내용을 적용한 뒤 다시 시도해 주세요.');
+ if(!confirm('발음 유사성·한국어 자연스러움·뜻 연결을 직접 확인했고, 이 연상과 장면을 이미지 제작에 사용하시겠습니까?'))return;
+ const former=c.rework.mnemonicApproved;c.rework.mnemonicApproved=true;c.sourceChecked=false;c.imageChecked=false;c.speechChecked=false;const saved=await write();if(!saved){c.rework.mnemonicApproved=former;return;}alert('연상·장면을 확정했습니다. 자동 제작에서 이미지 생성·QA까지 진행됩니다.');};
+ if($('generateImage'))$('generateImage').onclick=async()=>{
+ const c=current(),v=formData();if(!c.rework?.mnemonicApproved)return alert('먼저 연상문장과 장면을 확정해 주세요.');
+ if(v.mnemonic!==c.mnemonic||v.scene!==c.scene)return alert('현재 작성 중인 문장/장면을 먼저 저장하고 다시 확정해 주세요.');
+ if(!confirm('이 연상문장으로 새 이미지를 생성할까요? API 비용이 발생하며, 이미지는 자동 공개되지 않습니다.'))return;
+ await aiAction($('generateImage'),'/api/image',{...payload(c),mnemonic:c.mnemonic,scene:c.scene},result=>{
+ c.history=Array.isArray(c.history)?c.history:[];
+ c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+ c.sceneCandidates.push({path:result.image,mode:'clean',source:'AI 생성 시안',date:new Date().toISOString()});
+ c.history.push({date:new Date().toISOString(),kind:'generated-image',newImage:result.image,previousSceneImage:c.sceneImage,previousMode:c.sceneImageMode});
+ write();alert('새 이미지를 후보로 저장했습니다. 장면 버전 비교에서 직접 선택하세요. 기존 그림은 유지됩니다.');
+ });
+ };
+ if($('beginMnemonicRework'))$('beginMnemonicRework').onclick=()=>beginRework('mnemonic');
+ if($('beginImageRework'))$('beginImageRework').onclick=async()=>{
+   const before=current();if(!before)return;let v=formData();
+   if(v.excelImport && (v.pos==='미확인'||!v.pos))v.pos=api.posFor(v.word,v.meaning);
+   if(v.excelImport){if(!v.stressMark)v.stressMark=api.stressMarkFor(v);if(v.excelImport&&!v.excelImport.stressMark)v.excelImport.stressMark=v.stressMark||'';v.stress=api.stressFor(v);}
+   if(!uniqueWord(v))return alert('같은 단어·품사·뜻의 카드가 이미 존재합니다.');
+   if(!v.mnemonic?.trim()||!v.scene?.trim())return alert('연상문장과 장면 설명이 필요합니다.');
+   if(!confirm('현재 화면의 내용을 자동 저장한 뒤 새 웹툰 이미지를 바로 생성할까요? API 비용이 발생합니다. 기존 공개 이미지는 새 이미지가 완성될 때까지 유지됩니다.'))return;
+   v.history=Array.isArray(before.history)?[...before.history]:[];
+   v.history.push({date:new Date().toISOString(),kind:'auto-saved-before-image',status:before.status});
+   if(before.status==='rejected'&&v.excelImport){v.status='draft';v.flags=[];v.rework=null;}
+   cards=cards.map(x=>x.id===before.id?v:x);
+   if(!await write({skipRender:true})){cards=cards.map(x=>x.id===before.id?before:x);return;}
+   const c=current();
+   const btn=$('beginImageRework'),status=$('imageReworkStatus'),oldText=btn.textContent;
+   btn.disabled=true;btn.textContent='이미지 생성 중…';
+   if(status){status.style.display='block';status.style.color='#24415f';status.textContent='1/2 · AI 웹툰 이미지를 생성하고 있습니다. 이 창을 닫지 마세요.';}
+   c.history=Array.isArray(c.history)?c.history:[];
+   c.history.push({date:new Date().toISOString(),kind:'image-rework-start',status:c.status});
+   try{
+     const result=await batchRequest('/api/image',{...payload(c),mnemonic:c.mnemonic,scene:c.scene});
+     if(!result.image)throw Error('생성 이미지 경로가 없습니다.');
+     btn.textContent='AI 품질검사 중…';
+     if(status)status.textContent='2/2 · 이미지 생성 완료 · 말풍선·장면·가독성을 AI가 검사하고 있습니다.';
+     let qa;
+     try{qa=await batchRequest('/api/image-review',{...payload(c),image:result.image});}
+     catch(err){qa={passed:false,total:null,issues:['AI 품질검사 실패: '+err.message],retryFeedback:''};}
+     c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+     c.sceneCandidates.push({path:result.image,mode:'clean',source:'현재 문장 직접 재제작 · QA '+(qa.passed===true?'통과':'재검토'),date:new Date().toISOString(),imageReview:qa});
+     c.history.push({date:new Date().toISOString(),kind:'generated-image',newImage:result.image,previousSceneImage:c.sceneImage,previousMode:c.sceneImageMode,reviewPassed:qa.passed===true});
+     c.batchSuggestion={...(c.batchSuggestion||{}),imageReview:qa};
+     // 이미지가 없던 초안은 QA 통과 시 바로 카드에 연결한다. 기존 공개 이미지는 자동 교체하지 않는다.
+     if(qa.passed===true && !c.sceneImage){c.sceneImage=result.image;c.sceneImageMode='clean';c.imageChecked=false;c.speechChecked=false;}
+     const saved=await write({skipRender:true});if(!saved)throw Error('생성 결과를 클라우드에 저장하지 못했습니다.');
+     if(status){status.style.color=qa.passed===true?'#186a47':'#9a5b00';status.textContent=qa.passed===true?(c.sceneImage===result.image?'완료 · 이미지 생성과 QA를 통과해 카드에 연결했습니다. 아래 미리보기에서 확인하세요.':'완료 · 새 이미지가 후보로 저장되었습니다. 기존 공개 이미지는 유지됩니다.'):'생성 완료 · QA 재검토가 필요합니다. 새 이미지는 후보로 보관했습니다.';}
+     render();
+     const restored=$('imageReworkStatus');if(restored){restored.style.display='block';restored.style.color=qa.passed===true?'#186a47':'#9a5b00';restored.textContent=qa.passed===true?(c.sceneImage===result.image?'완료 · 이미지 생성과 QA를 통과해 카드에 연결했습니다.':'완료 · 새 이미지 후보가 생성되었습니다. 기존 공개 이미지는 유지됩니다.'):'생성 완료 · QA 재검토가 필요합니다. 후보 이미지를 확인하세요.';}
+   }catch(err){
+     if(status){status.style.display='block';status.style.color='#a52a2a';status.textContent='실패 · '+err.message;}
+     alert('이미지 생성 실패: '+err.message);
+   }finally{
+     const b=$('beginImageRework');if(b){b.disabled=false;b.textContent=oldText;}
+   }
+ };
+ if($('versionList'))$('versionList').onclick=async e=>{
+   const remove=e.target.closest('[data-delete-scene]');
+   if(remove){
+     const c=current(),vers=availableImageVersions(c).filter(v=>!v.current),target=vers[Number(remove.dataset.deleteScene)];
+     if(!target)return;
+     if(target.current||target.path===c.sceneImage)return alert('현재 사용 중인 장면은 삭제할 수 없습니다. 다른 시안을 먼저 선택하세요.');
+     if(!confirm('이 이미지 후보를 목록에서 삭제할까요?\n현재 장면과 서버의 원본 이미지 파일은 유지됩니다.\n필요하면 기존 파일을 다시 후보로 등록할 수 있습니다.'))return;
+     c.hiddenSceneCandidates=Array.isArray(c.hiddenSceneCandidates)?c.hiddenSceneCandidates:[];
+     if(!c.hiddenSceneCandidates.includes(target.path))c.hiddenSceneCandidates.push(target.path);
+     c.sceneCandidates=(c.sceneCandidates||[]).filter(v=>v.path!==target.path);
+     c.history=Array.isArray(c.history)?c.history:[];
+     c.history.push({kind:'scene-candidate-deleted',date:new Date().toISOString(),image:target.path,reason:'관리자가 이미지 후보 목록에서 삭제함 (원본 파일 유지)'});
+     await write();return;
+   }
+   const reject=e.target.closest('[data-reject-scene]');
+   if(reject){
+     const c=current(),vers=availableImageVersions(c).filter(v=>!v.current),target=vers[Number(reject.dataset.rejectScene)];
+     if(!target||target.current)return;
+     const reason=prompt('이미지 반려 사유를 입력하세요. 예: 말풍선 오탈자 / 웹툰 스타일 불일치 / 핵심 장면 불명확');
+     if(reason===null)return;
+     if(!reason.trim())return alert('반려 사유를 반드시 입력하세요.');
+     if(qa.fallback_used===true)throw Error('로컬 대체 QA 결과는 AI 검수 통과로 인정하지 않습니다.');
+    c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+     let item=c.sceneCandidates.find(x=>x.path===target.path);
+     if(!item){item={path:target.path,mode:target.mode,source:target.source,date:new Date().toISOString()};c.sceneCandidates.push(item)}
+     item.reviewStatus='rejected';item.rejectionReason=reason.trim();item.reviewedAt=new Date().toISOString();
+     c.history=Array.isArray(c.history)?c.history:[];
+     c.history.push({kind:'scene-candidate-rejected',date:new Date().toISOString(),image:target.path,reason:reason.trim()});
+     write();return;
+   }
+   const b=e.target.closest('[data-restore-scene]');if(!b)return;
+   const c=current(),vers=availableImageVersions(c).filter(v=>!v.current),target=vers[Number(b.dataset.restoreScene)];
+   if(!target)return;
+   try{if(!await verifiedImage(target.path))return alert('이미지 파일을 찾을 수 없습니다: '+target.path+'\n다른 후보를 선택하거나 이미지를 다시 생성하세요.')}catch(err){return alert('이미지 검사 오류: '+err.message)}if(target.reviewStatus==='rejected'&&!confirm('반려된 이미지입니다. 다시 선택하려면 반드시 재검수가 필요합니다. 계속할까요?'))return;if(!confirm(c.status==='published'?'현재 공개 중인 카드의 이미지를 즉시 교체합니다. 학생에게 변경된 그림이 표시됩니다. 실제 이미지의 내용·오탈자·사용권한을 확인했습니까?':'이 시안을 카드 장면으로 선택하시겠습니까? 공개 전 최종 검수가 필요합니다.'))return;
+   c.history=Array.isArray(c.history)?c.history:[];
+   c.history.push({date:new Date().toISOString(),kind:'scene-selected',previousSceneImage:c.sceneImage,previousMode:c.sceneImageMode,newImage:target.path});
+   c.sceneImage=target.path;c.sceneImageMode=target.mode==='clean'?'clean':'legacy-crop';
+   c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+   let chosen=c.sceneCandidates.find(x=>x.path===target.path);
+   if(!chosen){chosen={path:target.path,mode:target.mode,source:target.source,date:new Date().toISOString()};c.sceneCandidates.push(chosen)}
+   chosen.reviewStatus='selected';chosen.rejectionReason='';chosen.reviewedAt=new Date().toISOString();
+   if(c.status!=='published'){c.imageChecked=false;c.speechChecked=false;c.sourceChecked=false;c.status='draft';}
+   else {c.imageChecked=true;c.speechChecked=true;c.sourceChecked=true;}
+   c.rework=null;
+   const saved=await write();if(saved){const result=$('result');if(result){result.textContent='이미지 선택이 클라우드에 저장됐습니다. 기존 공개 상태는 유지됩니다.';result.style.color='#186a47';}}
+ };
+ const sceneUpload=$('sceneUpload');if(sceneUpload)sceneUpload.onchange=async e=>{
+   const file=e.target.files?.[0];if(!file)return;
+   if(file.size>8*1024*1024)return alert('8MB 이하 이미지를 선택하세요.');
+   if(!['image/png','image/jpeg','image/webp'].includes(file.type))return alert('PNG/JPG/WebP만 지원합니다.');
+   if(!confirm('이 파일을 검수 전 이미지 후보로 추가하시겠습니까? 기존 이미지는 유지됩니다.'))return;
+   try{
+     const encoded=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=reject;r.readAsDataURL(file)});
+     const response=await fetch('/api/scene-upload',{method:'POST',headers:{'Content-Type':'application/json',...(OneCutCloud.enabled?{'Authorization':'Bearer '+OneCutCloud.token}:{})},body:JSON.stringify({filename:file.name,image_base64:encoded})});
+     const result=await response.json();if(!response.ok)throw Error(result.error||'업로드 실패');
+     const c=current();c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+     c.sceneCandidates.push({path:result.image,mode:'clean',source:'관리자 업로드(미검수)',date:new Date().toISOString()});
+     const saved=await write();if(saved)alert('후보 이미지가 저장됐습니다. 새 시안을 선택한 뒤 학생용 카드 미리보기를 확인하세요.');
+   }catch(err){alert('이미지 등록 실패: '+err.message)}
+ };
+ requestStatus();
+ void hydrateCloudImages();
+ }
+function payload(c){return {word:c.word,pos:c.pos,ipa:c.ipa,hangul:c.hangul,meaning:c.meaning,mnemonic:c.mnemonic,scene:c.scene,sceneSpeech:c.sceneSpeech||'',reason:c.rework?.reason||''};}
+async function requestStatus(){const el=$('aiState');if(!el)return;try{const r=await fetch('/api/status',{cache:'no-store'});if(!r.ok)throw Error();const d=await r.json();el.textContent=d.ready?`AI 서버 준비됨 · 문장 ${d.text_model} / 이미지 ${d.image_model}`:'AI 서버 실행 중 · API 키 미설정';}catch{el.textContent='AI 서버 연결 안 됨: python server.py로 실행해야 합니다.';}}
+async function aiAction(button,url,data,success){const old=button.textContent;button.disabled=true;button.textContent='AI 생성 중…';try{
+ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json',...(OneCutCloud.enabled?{'Authorization':'Bearer '+OneCutCloud.token}:{})},body:JSON.stringify(data)});
+ const d=await r.json();if(!r.ok)throw Error(d.error||`요청 실패 (${r.status})`);
+ success(d);
+ }catch(e){alert('AI 생성 실패: '+e.message+'\n서버 설정과 API 크레딧/권한을 확인해 주세요.');}
+ finally{if(button.isConnected){button.disabled=false;button.textContent=old;}}
+}
+function formData(){const c=current(),f=$('form');if(!c||!f)return null;let out={...c};for(let k of ['word','pos','ipa','hangul','meaning','image','sceneImage','mnemonic','scene','sceneSpeech','example','translation','notes'])out[k]=f.elements.namedItem(k).value.trim();out.stressMark=String(f.elements.namedItem('stressMark')?.value||'').trim();out.stress=api.parseStressMark(out.stressMark,out.word)||[0,0];out.scores=[30,25,25,20].map((max,i)=>Math.max(0,Math.min(max,Number(f.elements['score'+i].value)||0)));out.flags=Object.keys(flagNames).filter(k=>f.elements['flag_'+k].checked);out.speechRequired=!!out.sceneSpeech || f.elements.speechRequired.checked;out.speechChecked=f.elements.speechChecked.checked;out.sourceChecked=f.elements.sourceChecked.checked;out.imageChecked=f.elements.imageChecked.checked;out.sceneImageMode=f.elements.sceneImageClean.checked?'clean':'legacy-crop';return out}
+function unchanged(a,b){return JSON.stringify({...a,status:null,notes:null})===JSON.stringify({...b,status:null,notes:null})}
+function uniqueWord(after){return !cards.some(c=>c.id!==after.id&&c.word.trim().toLowerCase()===after.word.trim().toLowerCase()&&c.pos===after.pos&&String(c.meaning||'').trim().toLowerCase()===String(after.meaning||'').trim().toLowerCase())}
+async function save(){
+ const before=current(),after=formData();
+ if(!before||!after)return;
+ if(!after.word||!after.pos)return alert('단어와 품사는 필수입니다.');
+ if(!uniqueWord(after))return alert('같은 단어·품사·뜻의 카드가 이미 존재합니다.');
+ // 소리·뜻·연상·장면·평가 점수가 바뀌면 이전 AI 평가를 절대 재사용하지 않는다.
+ const evalKeys=['word','pos','ipa','hangul','meaning','mnemonic','scene','sceneSpeech','speechRequired','stressMark','stress'];
+ if(evalKeys.some(k=>JSON.stringify(before[k]??'')!==JSON.stringify(after[k]??'')) || JSON.stringify(before.scores)!==JSON.stringify(after.scores))after.evaluation=null;
+ if(before.sceneImage!==after.sceneImage||before.sceneSpeech!==after.sceneSpeech)after.speechChecked=false;
+ // 편집 내용 저장은 공개/승인과 분리됩니다. 재검수 대기열은 자동으로 분류됩니다.
+ const contentChanged=Object.keys(after).some(k=>!['history','status','notes'].includes(k)&&JSON.stringify(after[k])!==JSON.stringify(before[k]));
+ if(before.status==='published'&&!contentChanged&&after.notes===before.notes){
+  const result=$('result');if(result){result.textContent='변경된 내용이 없습니다. 기존 공개 상태가 유지됩니다.';result.style.color='#186a47';}
+  return;
+ }
+ if(before.status==='published'&&!confirm('이 단어는 현재 공개 중입니다. 수정사항을 저장하면 학생용에도 즉시 반영됩니다. 변경 내용을 직접 확인했으며, 공개 상태를 유지하고 저장하시겠습니까?'))return;
+ after.status=before.status==='published'?'published':before.status==='rejected'?'rejected':'draft';
+ if(before.status==='rejected'){
+   if(before.mnemonic!==after.mnemonic||before.scene!==after.scene){
+     after.rework={...before.rework,mnemonicApproved:false};after.sceneImage='';
+     after.sceneImageMode='legacy-crop';after.imageChecked=false;
+   }
+ }
+ after.history=Array.isArray(before.history)?[...before.history]:[];
+ after.history.push({kind:'draft-saved',date:new Date().toISOString(),status:before.status});
+ cards=cards.map(c=>c.id===before.id?after:c);
+ const btn=$('form')?.querySelector('button[type="submit"]');
+ if(btn){btn.disabled=true;btn.textContent='저장 중…'}
+ const ok=await write({skipRender:true});
+ if(!ok)cards=cards.map(c=>c.id===before.id?before:c);
+ const result=$('result');
+ if(result){result.textContent=ok?'저장 완료 · 클라우드에 반영됐습니다.':'저장에 실패했습니다. 변경 내용을 확인하세요.';result.style.color=ok?'#186a47':'#b42318';}
+ if(btn){btn.disabled=false;btn.textContent='저장'}
+}
+async function publishNow(){
+ const before=current(),after=formData();
+ if(!before||!after)return;
+ // Curated Excel records already contain a known sense: repair old [0,0] stress
+ // and provisional part-of-speech before publishing, not the approved mnemonic.
+ if(after.excelImport && (after.pos==='미확인'||!after.pos))after.pos=api.posFor(after.word,after.meaning);
+ if(after.excelImport){if(!after.stressMark)after.stressMark=api.stressMarkFor(after);after.stress=api.stressFor(after);}
+ if(!uniqueWord(after))return alert('같은 단어·품사·뜻의 카드가 이미 존재합니다.');
+ const required=['word','pos','ipa','meaning','mnemonic','scene','sceneImage'];
+ const missing=required.filter(k=>!String(after[k]||'').trim());
+ if(missing.length)return alert('공개 필수 입력값이 없습니다: '+missing.join(', '));
+ if(!after.pos)return alert('품사가 확인되지 않았습니다. 사전 확인 후 품사를 지정하세요.');
+ const stress=after.stress;
+ if(!Array.isArray(stress)||stress.length!==2||!stress.every(Number.isInteger)||stress[0]<0||stress[1]>after.word.length||stress[1]<=stress[0])
+  return alert('영단어 강세 위치를 확인해 주세요.');
+ if(after.sceneImageMode!=='clean')return alert('장면 이미지를 직접 검토하고 장면 이미지 확인 항목을 체크해 주세요.');
+ const aiReview=after.batchSuggestion||{};
+ if(!after.excelImport&&aiReview.imageReview?.passed!==true || aiReview.vetoReason || aiReview.imageError)return alert('이미지 QA 통과 및 제작 오류 해소 후 공개할 수 있습니다. AI 자동 제작 또는 이미지 재생성을 먼저 진행하세요.');
+ try{if(!await verifiedImage(after.sceneImage))return alert('공개 이미지 파일을 불러올 수 없습니다. 정상 이미지를 선택한 후 다시 시도하세요.')}catch(err){return alert('이미지 검사 오류: '+err.message)}
+ // Never auto-overwrite editorial decisions with a fresh AI evaluation.
+ // Existing AI scores and rejection flags remain advisory, not approval gates.
+ const score=api.score(after);
+ const notes=[];
+ if(!after.evaluation)notes.push('AI 품질평가 미실시');
+ if(score<85)notes.push('품질평가 '+score+'점 (권장 85점 미만)');
+ if(after.flags?.length)notes.push('기존 품질 경고: '+after.flags.map(f=>flagNames[f]||f).join(', '));
+ if(after.rework)notes.push('이전 반려·재작업 기록 있음');
+ const advisory=notes.length?'\n\n품질 참고사항 (공개 차단 아님)\n• '+notes.join('\n• '):'';
+ if(!confirm(`‘${after.word} (${after.pos})’ 최종 공개 확인\n\n• 발음·강세·뜻·연상·예문을 직접 검토했습니다.\n• 이미지의 말풍선·오탈자·저작권 및 사용권한을 확인했습니다.${advisory}\n\n관리자 책임으로 승인하고 학생에게 공개하시겠습니까?`))return;
+ after.sourceChecked=true;after.imageChecked=true;after.speechChecked=true;
+ after.status='published';
+ after.history=Array.isArray(before.history)?[...before.history]:[];
+ const now=new Date().toISOString();
+ after.history.push({kind:'admin-approved',date:now,image:after.sceneImage,qualityScore:score,qualityWarnings:notes,previousFlags:[...(after.flags||[])],previousRework:after.rework||null});
+ after.history.push({kind:'student-published',date:now,image:after.sceneImage});
+ // Current flags describe active rejection, not historical review findings.
+ after.flags=[];
+ after.rework=null;
+ cards=cards.map(c=>c.id===before.id?after:c);
+ const btn=$('publishNow');if(btn){btn.disabled=true;btn.textContent='공개 저장 중…';}
+ const ok=await write({skipRender:true});
+ if(!ok){cards=cards.map(c=>c.id===before.id?before:c);}
+ const result=$('result');
+ if(result){result.textContent=ok?'승인 및 공개 완료 · 클라우드에 반영됐습니다.':'공개 저장 실패 · 기존 상태를 유지합니다.';result.style.color=ok?'#186a47':'#b42318';}
+ if(btn){btn.disabled=false;btn.textContent='승인 및 공개';}
+ if(ok)render();
+}
+function transition(status){
+ const c=current(),form=formData();if(!c||!form)return;
+ if(!unchanged(c,form))return alert('화면에 변경사항이 있습니다. 현재 화면 내용을 적용한 뒤 다시 시도해 주세요.');
+ if(status!=='draft')return;
+ if(c.status!=='published')return alert('현재 학생에게 공개된 상태가 아닙니다.');
+ if(!confirm('학생용 공개를 중단하고 초안으로 전환할까요?'))return;
+ c.status='draft';c.history=Array.isArray(c.history)?c.history:[];
+ c.history.push({kind:'student-unpublished',date:new Date().toISOString(),image:c.sceneImage});write();
+}
+$('list').onclick=e=>{const b=e.target.closest('[data-id]');if(b){selected=b.dataset.id;render()}};$('q').oninput=render;$('add').onclick=()=>{const word=prompt('영어 단어');if(!word?.trim())return;const id='card-'+Date.now();cards.unshift({id,word:word.trim(),pos:'',ipa:'',hangul:'',meaning:'',stress:[0,0],mnemonic:'',scene:'',image:'',example:'',translation:'',notes:'',status:'draft',scores:[0,0,0,0],flags:[],sourceChecked:false,imageChecked:false});selected=id;write()};
+// v4.0: CSV 대량 초안 등록. 기존 공개 카드/이미지/학습기록은 건드리지 않는다.
+const CSV_COLUMNS=['word','pos','ipa','hangul','meaning','example','translation'];
+let bulkCsvCandidates=null;
+function csvParse(text){
+ const input=String(text||'').replace(/^\uFEFF/,'');
+ const rows=[];let row=[],cell='',quoted=false;
+ for(let i=0;i<input.length;i++){
+  const ch=input[i];
+  if(ch==='"'){
+   if(quoted&&input[i+1]==='"'){cell+='"';i++;}
+   else if(quoted){quoted=false;}
+   else if(!cell){quoted=true;}
+   else throw Error('CSV 따옴표 형식이 올바르지 않습니다.');
+  }else if(ch===','&&!quoted){row.push(cell);cell='';}
+  else if((ch==='\n'||ch==='\r')&&!quoted){row.push(cell);if(row.some(x=>x.trim()))rows.push(row);row=[];cell='';if(ch==='\r'&&input[i+1]==='\n')i++;}
+  else cell+=ch;
+ }
+ if(quoted)throw Error('CSV의 닫는 따옴표가 없습니다.');
+ row.push(cell);if(row.some(x=>x.trim()))rows.push(row);
+ return rows;
+}
+function csvCell(value){const s=String(value??'');return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}
+function bulkCsvAnalyze(text){
+ const rows=csvParse(text);if(!rows.length)throw Error('빈 CSV 파일입니다.');
+ const headers=rows.shift().map((x,i)=>i===0?x.trim().replace(/^\uFEFF/,'').toLowerCase():x.trim().toLowerCase());
+ if(!headers.includes('word')||!headers.includes('meaning'))throw Error('CSV 첫 행에 word, meaning 열이 필요합니다. 예시 파일을 사용하세요.');
+ if(rows.length>3000)throw Error('한 번에 최대 3000행 파일을 검토할 수 있습니다. 나누어 등록하세요.');
+ const seen=new Set(cards.map(c=>String(c.word||'').trim().toLowerCase()+'|'+String(c.pos||'').trim().toLowerCase()));
+ const result={valid:[],duplicates:0,invalid:[],total:rows.length};
+ for(let i=0;i<rows.length;i++){
+  const value={};headers.forEach((key,j)=>{if(CSV_COLUMNS.includes(key))value[key]=String(rows[i][j]||'').trim();});
+  const word=value.word||'',meaning=value.meaning||'',pos=value.pos||'';
+  if(!word||!meaning||word.length>100||meaning.length>350||!(/^[A-Za-z][A-Za-z '\-]*$/.test(word))){result.invalid.push(i+2);continue;}
+  const key=word.toLowerCase()+'|'+pos.toLowerCase();
+  if(seen.has(key)){result.duplicates++;continue;}
+  seen.add(key);
+  if(result.valid.length<300)result.valid.push(value);
+  else result.invalid.push(i+2);
+ }
+ return result;
+}
+function bulkCsvStatus(info){
+ const previews=info.valid.slice(0,5).map(x=>x.word+(x.pos?' ('+x.pos+')':'')).join(', ');
+ $('bulkCsvPreview').textContent=`전체 ${info.total}행 · 새 초안 ${info.valid.length}개 · 기존/파일 내 중복 ${info.duplicates}개 · 오류 또는 한도 초과 ${info.invalid.length}개${info.invalid.length?' (행 '+info.invalid.slice(0,10).join(', ')+')':''}. ${previews?'미리보기: '+previews:''}`;
+ $('bulkCsvCommit').disabled=!info.valid.length;
+}
+$('downloadCsvTemplate').onclick=()=>{
+ const rows=[CSV_COLUMNS,['enormous','형용사','/ɪˈnɔːr.məs/','이노머스','거대한','The building is enormous.','그 건물은 거대하다.'],['careful','형용사','/ˈker.fəl/','케어풀','조심하는','Be careful.','조심하세요.']];
+ const data='\uFEFF'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+ const blob=new Blob([data],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='onecut_vocabulary_template.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
+// v4.6.1: curated starter file. The button downloads only; no cloud writes or paid calls.
+const ONECUT_STARTER_ROWS=[
+  ['abandon','동사','/əˈbæn.dən/','어밴던','버리다, 포기하다','They had to abandon the plan.','그들은 계획을 포기해야 했다.'],
+  ['adapt','동사','/əˈdæpt/','어댑트','적응하다','We must adapt to change.','우리는 변화에 적응해야 한다.'],
+  ['admire','동사','/ədˈmaɪr/','어드마이어','존경하다, 감탄하다','I admire her courage.','나는 그녀의 용기에 감탄한다.'],
+  ['approach','동사','/əˈproʊtʃ/','어프로치','접근하다','We approach the station.','우리는 역에 접근한다.'],
+  ['benefit','명사','/ˈben.ə.fɪt/','베네핏','이익, 혜택','Exercise has many benefits.','운동에는 많은 이점이 있다.'],
+  ['capture','동사','/ˈkæp.tʃər/','캡처','붙잡다, 포착하다','The camera captured the moment.','카메라가 그 순간을 포착했다.'],
+  ['conceal','동사','/kənˈsiːl/','컨실','숨기다','He tried to conceal the truth.','그는 진실을 숨기려 했다.'],
+  ['discover','동사','/dɪˈskʌv.ər/','디스커버','발견하다','They discover a new path.','그들은 새 길을 발견한다.'],
+  ['hesitate','동사','/ˈhez.ɪ.teɪt/','헤지테이트','주저하다','Do not hesitate to ask.','질문을 주저하지 마세요.'],
+  ['preserve','동사','/prɪˈzɝːv/','프리저브','보존하다','We preserve old photographs.','우리는 오래된 사진을 보존한다.']
+];
+$('downloadCsvStarter').onclick=()=>{
+ const data='\uFEFF'+[CSV_COLUMNS,...ONECUT_STARTER_ROWS].map(r=>r.map(csvCell).join(',')).join('\r\n');
+ const blob=new Blob([data],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='onecut_ai_starter_10_v432.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
+$('bulkCsvFile').onchange=async ev=>{
+ bulkCsvCandidates=null;$('bulkCsvCommit').disabled=true;
+ const file=ev.target.files?.[0];if(!file){$('bulkCsvPreview').textContent='CSV 파일을 선택하세요.';return;}
+ if(file.size>2*1024*1024){$('bulkCsvPreview').textContent='파일이 너무 큽니다. 2MB 이하로 나누어 주세요.';return;}
+ try{bulkCsvCandidates=bulkCsvAnalyze(await file.text());bulkCsvStatus(bulkCsvCandidates);}
+ catch(err){$('bulkCsvPreview').textContent='파일 분석 실패: '+err.message;}
+};
+async function bulkCommitCandidates(analysis,fromStarter=false){
+ if(!analysis?.valid?.length)return;
+ if(cloudSaving){alert('다른 저장이 진행 중입니다. 완료 후 실행하세요.');return;}
+ // Re-check duplicates against latest local snapshot, in case the list changed after preview.
+ const existing=new Set(cards.map(c=>String(c.word||'').trim().toLowerCase()+'|'+String(c.pos||'').trim().toLowerCase()));
+ const add=analysis.valid.filter(x=>!existing.has(x.word.trim().toLowerCase()+'|'+String(x.pos||'').trim().toLowerCase()));
+ if(!add.length){alert('등록할 새 단어가 없습니다.');return;}
+ if(!confirm(`${add.length}개 단어를 모두 초안으로 추가할까요?\n기존 카드와 공개 상태는 바꾸지 않습니다.\n먼저 JSON 백업을 자동 다운로드합니다.`))return;
+ $('backup').click();
+ const before=cards,now=Date.now();
+ const entries=add.map((x,i)=>({id:'bulk-'+now+'-'+i+'-'+Math.random().toString(36).slice(2,9),word:x.word,pos:x.pos||'',ipa:x.ipa||'',hangul:x.hangul||'',meaning:x.meaning,stress:(starterStress[x.word.toLowerCase()+'|'+(x.pos||'')]||[0,0]),mnemonic:'',scene:'',image:'',example:x.example||'',translation:x.translation||'',notes:'CSV로 등록한 초안 · IPA와 주강세 검증 필요',status:'draft',scores:[0,0,0,0],flags:[],sourceChecked:false,imageChecked:false}));
+ cards=[...entries,...cards];selected=entries[0].id;
+ const button=fromStarter?$('batchPrepareStarter'):$('bulkCsvCommit');button.disabled=true;button.textContent='클라우드 저장 중…';
+ try{
+  const saved=await write({skipRender:true});
+  if(!saved){cards=before;selected=before[0]?.id;return;}
+  bulkCsvCandidates=null;$('bulkCsvFile').value='';$('bulkCsvPreview').textContent=`${entries.length}개 초안 등록 완료. IPA·강세·연상문장·이미지는 각 단어에서 확인 후 공개하세요.`;
+  render();
+  if(fromStarter){$('batchProgress').textContent=`테스트 단어 ${entries.length}개 준비 완료. 작업 대상이 자동 선택됐습니다. '선택한 단어 연상 3안 일괄 제작'을 눌러 AI를 실행할 수 있습니다 (유료 API).`;document.getElementById('batchStudio').scrollIntoView({behavior:'smooth',block:'start'});}
+ }finally{button.textContent=fromStarter?'테스트 단어 10개 준비':'검토 후 초안 등록';button.disabled= false;}
+}
+$('bulkCsvCommit').onclick=()=>bulkCommitCandidates(bulkCsvCandidates,false);
+// v5.1.5: curated XLSX import. Browser never rewrites approved prose.
+let excelPreview=null,excelImportedIds=[],excelImageStop=false,excelImageRunning=false;
+function excelHeld(c){return Boolean(c?.excelImageHold || (c?.batchSuggestion?.excelImported && c?.batchSuggestion?.imageError));}
+function excelPendingIds(){return cards.filter(c=>c.excelImport && c.status!=='published' && c.mnemonic && c.scene && !c.sceneImage && !excelHeld(c)).map(c=>c.id);}
+function excelRefreshPending(){
+ excelImportedIds=excelPendingIds();
+ if($('excelCreateImages')){
+  $('excelCreateImages').disabled=excelImageRunning||!excelImportedIds.length;
+  if($('excelCreateRemainingAll'))$('excelCreateRemainingAll').disabled=excelImageRunning||!excelImportedIds.length;
+  $('excelCreateImages').hidden=!!(excelPreview?.valid?.length)||!excelImportedIds.length;
+ }
+ const retry=$('excelRetryHold');if(retry){const item=cards.find(c=>c.id===selected);retry.disabled=excelImageRunning||!item?.excelImport||!excelHeld(item);}
+ const pending=excelImportedIds.length, held=cards.filter(c=>c.excelImport&&excelHeld(c)).length;
+ const interrupted=cards.filter(c=>c.excelImport&&c.excelImageHold&&typeof c.excelImageHold==='object'&&c.excelImageHold.type==='in-flight').length;
+ const info=$('excelImageQueue');if(info)info.textContent=`대기 ${pending}개 · 수동 확인 필요 ${held}개 (중단 가능성 ${interrupted}개) · 자동 공개 없음`;
+}
+function excelKey(obj){return String(obj.word||'').trim().toLocaleLowerCase()+'|'+String(obj.meaning||'').trim().toLocaleLowerCase();}
+async function excelReadBase64(file){
+ const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);
+ let raw='';for(let i=0;i<bytes.length;i+=8192)raw+=String.fromCharCode(...bytes.subarray(i,i+8192));
+ return btoa(raw);
+}
+$('excelImportFile').onchange=async e=>{
+ if(excelImageRunning){alert('이미지 제작 중에는 새 엑셀을 올릴 수 없습니다. 현재 작업을 마친 후 진행하세요.');e.target.value='';return;}
+ excelPreview=null;$('excelImportCommit').disabled=true;
+ const file=e.target.files?.[0];if(!file)return;
+ if(!/\.xlsx$/i.test(file.name)||file.size>6_000_000){$('excelImportPreview').textContent='6MB 이하의 .xlsx 파일만 가능합니다.';return;}
+ $('excelImportPreview').textContent='엑셀 데이터 검증 중…';
+ try{
+  const parsed=await batchRequest('/api/content-xlsx-preview',{file_base64:await excelReadBase64(file)});
+  const seen=new Set(cards.map(excelKey));let duplicates=0;
+  const valid=[];
+  for(const x of parsed.rows){if(x.valid===false)continue;const k=excelKey(x);if(seen.has(k)){duplicates++;continue;}seen.add(k);valid.push(x);}
+  excelPreview={valid,duplicates,invalid:parsed.invalid_rows||[],total:parsed.total_rows??parsed.count};
+  $('excelImportPreview').textContent=`전체 ${parsed.total_rows}행 · 등록 가능 ${valid.length}개 · 기존/파일 내 중복 ${duplicates}개 · 오류 ${excelPreview.invalid.length}행. ${valid.slice(0,5).map(x=>x.word+'('+x.meaning+')').join(', ')}`;
+  $('excelImportCommit').disabled=!valid.length;
+  excelRefreshPending();
+ }catch(err){$('excelImportPreview').textContent='엑셀 검사 실패: '+err.message;}
+};
+$('excelImportCommit').onclick=async()=>{
+ if(!excelPreview?.valid.length||cloudSaving||excelImageRunning)return;
+ const known=new Set(cards.map(excelKey)),toAdd=excelPreview.valid.filter(x=>!known.has(excelKey(x)));
+ if(!toAdd.length)return alert('신규 콘텐츠가 없습니다.');
+ // Preflight before writing cloud drafts: a missing API key must not leave half-created cards.
+ let aiCheck;
+ try{
+  const response=await fetch('/api/status',{cache:'no-store'});
+  if(!response.ok)throw Error('HTTP '+response.status);
+  aiCheck=await response.json();
+ }catch(e){return alert('AI 서버 상태 확인 실패: '+e.message+'\n등록하지 않았습니다. 서버 연결을 확인하세요.');}
+ if(!aiCheck.ready || aiCheck.image_fallback)return alert('실제 OpenAI 이미지 생성 연결이 준비되지 않았습니다. 기존 onecut.private.env 설정을 확인하세요.\n엑셀 초안을 등록하지 않았습니다.');
+ const limit=$('excelBatchLimit')?.value||'all';
+ const planned=limit==='all'?toAdd.length:Math.min(toAdd.length,Math.max(1,Number(limit)||1));
+ if(!confirm(`${toAdd.length}개 뜻별 콘텐츠를 비공개 초안으로 등록하고 ${planned}개의 실제 AI 웹툰을 제작할까요? 이미지 API 비용이 발생합니다. 기존 공개 카드와 원본은 보존하며 자동 공개하지 않습니다.`))return;
+ $('backup').click();const old=cards,stamp=Date.now();
+ const next=toAdd.map((x,i)=>{
+  const spoken=(x.speech||'').split(/\s+\/\s+/)[0].trim().replace(/^[“"']|[”"']$/g,'');
+  const pos=api.posFor(x.word,x.meaning);
+  const stressMark=String(x.stress_mark||'').trim();
+  const marker={word:x.word,pos,meaning:x.meaning,stressMark,stress:api.parseStressMark(stressMark,x.word)||[0,0],excelImport:true};
+  return {id:'xlsx-'+stamp+'-'+i,word:x.word,pos,ipa:x.ipa,hangul:x.hangul,meaning:x.meaning,
+   stressMark,stress:api.stressFor(marker),mnemonic:x.mnemonic,scene:x.scene,sceneSpeech:spoken,speechRequired:!!spoken,
+   sceneImage:'',image:'',example:x.example,translation:x.translation,notes:'엑셀 '+x.excel_row+'행 · 하단 설명: '+x.footer+' · 추가 말풍선: '+x.speech+' · 품사 확인 필요 · 강세는 엑셀 강세 표시 사용',
+   status:'draft',scores:[0,0,0,0],flags:[],sourceChecked:false,imageChecked:false,speechChecked:false,sceneImageMode:'clean',sceneCandidates:[],history:[],
+   excelImport:{footer:x.footer,dialogue:x.speech,sourceRow:x.excel_row,stressMark}};
+ });
+ cards=[...next,...cards];selected=next[0].id;$('excelImportCommit').disabled=true;
+ const saved=await write({skipRender:true});
+ if(!saved){cards=old;$('excelImportCommit').disabled=false;return;}
+ excelRefreshPending();excelPreview=null;$('excelImportFile').value='';
+ $('excelImportPreview').textContent=`등록 성공 ${next.length}개 · AI 이미지 생성 중. 원문을 변경하지 않았습니다.`;
+ $('excelCreateImages').disabled=false;render();
+ await runExcelImages(true);
+};
+$('excelStopImages').onclick=()=>{excelImageStop=true;$('excelImageProgress').textContent='현재 생성·검수 완료 후 중지합니다.';};
+$('excelRetryHold').onclick=async()=>{
+ if(excelImageRunning||cloudSaving)return;
+ const c=cards.find(x=>x.id===selected);
+ if(!c?.excelImport||!excelHeld(c))return alert('보류된 엑셀 카드를 먼저 목록에서 선택하세요.');
+ if(!confirm(`${c.word} (${c.meaning}) 카드의 이미지 재생성을 허용할까요? 이전 요청이 서버에서 성공했을 가능성이 있으면 관리자 '다른 이미지 후보'와 저장소의 기존 이미지를 먼저 확인하세요. 재요청 시 API 비용이 추가로 발생합니다.`))return;
+ const previousHold=c.excelImageHold, previousError=c.batchSuggestion?.imageError;
+ delete c.excelImageHold;
+ if(c.batchSuggestion)delete c.batchSuggestion.imageError;
+ c.history=Array.isArray(c.history)?c.history:[];
+ c.history.push({kind:'excel-manual-retry-authorized',date:new Date().toISOString()});
+ if(!await write({skipRender:true})){
+  c.excelImageHold=previousHold||true;
+  if(c.batchSuggestion)c.batchSuggestion.imageError=previousError||'이전 실패';
+  return alert('재시도 승인 상태 저장 실패');
+ }
+ excelRefreshPending();render();
+};
+async function runExcelImages(skipConfirm=false,forcedLimit=null){
+ if(excelImageRunning||cloudSaving)return;
+ excelRefreshPending();
+ const aiStatus=await fetch('/api/status',{cache:'no-store'}).then(r=>r.json()).catch(()=>({ready:false}));
+ if(!aiStatus.ready)return alert('실제 AI 이미지 생성용 OPENAI_API_KEY가 연결되지 않았습니다. 기존 onecut.private.env 설정을 확인하세요.');
+ const limit=forcedLimit||$('excelBatchLimit')?.value||'1';
+ const queue=excelImportedIds.map(id=>cards.find(c=>c.id===id)).filter(c=>c && c.status!=='published' && c.mnemonic && c.scene && !c.sceneImage && !excelHeld(c));
+ const jobs=queue.slice(0,limit==='all'?queue.length:Math.max(1,Number(limit)||1));
+ if(!jobs.length)return alert('이미지 생성 대기 중인 신규 엑셀 카드가 없습니다. 실패 카드는 재시도 허용 후 다시 실행하세요.');
+ if(!skipConfirm && !confirm(`${jobs.length}개의 웹툰 이미지를 순서대로 실제 OpenAI로 생성하고 품질검사합니다. API 비용이 발생합니다. 자동 공개/실패 자동 재시도는 없습니다. 진행할까요?`))return;
+ excelImageRunning=true;excelImageStop=false;$('excelCreateImages').disabled=true;if($('excelCreateRemainingAll'))$('excelCreateRemainingAll').disabled=true;$('excelStopImages').disabled=false;$('excelImportFile').disabled=true;$('excelImportCommit').disabled=true;
+ let success=0,failed=0;
+ try{
+  for(let i=0;i<jobs.length;i++){
+   if(excelImageStop)break;
+   const c=jobs[i];$('excelImageProgress').textContent=`${i+1}/${jobs.length} · ${c.word} (${c.meaning}) 이미지 생성 준비 중…`;
+   // Commit a resumable hold *before* the paid request: a browser crash, timeout or
+   // lost server response must never silently charge again on the next session.
+   c.excelImageHold={type:'in-flight',startedAt:new Date().toISOString()};
+   c.batchSuggestion={...(c.batchSuggestion||{}),excelImported:true};
+   if(!await write({skipRender:true})){
+    excelImageStop=true;
+    $('excelImageProgress').textContent='클라우드에 제작 시작 상태를 저장하지 못해 유료 AI 요청을 중단했습니다.';
+    break;
+   }
+   $('excelImageProgress').textContent=`${i+1}/${jobs.length} · ${c.word} (${c.meaning}) 이미지 생성 중…`;
+   try{
+    const result=await batchRequest('/api/image',payload(c));
+    if(!result.image || result.model==='local-webtoon-fallback')throw Error('실제 OpenAI 이미지가 아닙니다. 저장을 중단합니다.');
+    $('excelImageProgress').textContent=`${i+1}/${jobs.length} · 이미지 품질검사 중…`;
+    let qa;
+    try{qa=await batchRequest('/api/image-review',{...payload(c),image:result.image});}
+    catch(e){qa={passed:false,total:null,issues:['AI 검수 실행 실패: '+e.message]};}
+    c.sceneCandidates=Array.isArray(c.sceneCandidates)?c.sceneCandidates:[];
+    c.sceneCandidates.push({path:result.image,mode:'clean',source:'v5.1.6 엑셀 원문 이미지 · QA '+(qa.passed?'통과':'재검토'),date:new Date().toISOString(),imageReview:qa});
+    c.history=Array.isArray(c.history)?c.history:[];
+    c.history.push({kind:'excel-generated-image',date:new Date().toISOString(),newImage:result.image,reviewPassed:qa.passed===true});
+    c.batchSuggestion={...(c.batchSuggestion||{}),imageReview:qa,excelImported:true};
+    if(qa.passed===true){c.sceneImage=result.image;c.sceneImageMode='clean';c.imageChecked=false;c.speechChecked=false;success++;delete c.excelImageHold;delete c.batchSuggestion.imageError;}
+    else{c.batchSuggestion.imageError='이미지 QA 미통과 · 관리자 재검토 필요';c.excelImageHold=true;failed++;}
+    if(!await write({skipRender:true})){excelImageStop=true;$('excelImageProgress').textContent='저장 실패로 일괄 작업을 중단했습니다. 재시도 전 클라우드 상태를 확인하세요.';break;}
+   }catch(err){failed++;c.excelImageHold=true;c.batchSuggestion={...(c.batchSuggestion||{}),excelImported:true,imageError:String(err.message||err).slice(0,240)};
+    if(!await write({skipRender:true})){excelImageStop=true;$('excelImageProgress').textContent='오류 상태 저장 실패. 재시도 전 클라우드 상태를 확인하세요.';break;}}
+  }
+ }finally{
+  excelImageRunning=false;$('excelStopImages').disabled=true;$('excelImportFile').disabled=false;
+  $('excelCreateImages').disabled=false;if($('excelCreateRemainingAll'))$('excelCreateRemainingAll').disabled=false;
+  if(!$('excelImageProgress').textContent.includes('저장 실패'))$('excelImageProgress').textContent=`이번 작업: QA 통과 ${success}개 · 오류/재검토 ${failed}개 · 미진행 ${jobs.length-success-failed}개. 자동 공개 없음.`;
+  excelRefreshPending();
+  render();
+ }
+}
+$('excelCreateImages').onclick=()=>runExcelImages(false);
+$('excelCreateRemainingAll').onclick=()=>runExcelImages(false,'all');
+
+// v5.3.0: one-file content package import (XLSX + reviewed images).
+let contentPackageFile=null;
+$('contentPackageZip').onchange=e=>{
+ contentPackageFile=e.target.files?.[0]||null;
+ const btn=$('contentPackageUpload');
+ if(!contentPackageFile){btn.disabled=true;$('contentPackageStatus').textContent='ZIP 파일을 선택하세요.';return;}
+ if(!/\.zip$/i.test(contentPackageFile.name)||contentPackageFile.size>50*1024*1024){
+  contentPackageFile=null;btn.disabled=true;$('contentPackageStatus').textContent='50MB 이하의 .zip 파일만 가능합니다.';return;
+ }
+ btn.disabled=false;$('contentPackageStatus').textContent=`선택: ${e.target.files[0].name} · 엑셀과 이미지를 한 번에 검사합니다.`;
+};
+async function runContentPackageImport(){
+ if(!contentPackageFile||cloudSaving||excelImageRunning)return;
+ const btn=$('contentPackageUpload');btn.disabled=true;$('contentPackageZip').disabled=true;
+ $('contentPackageStatus').textContent='패키지 ZIP 검사 · 이미지 업로드 중…';
+ try{
+  const result=await batchRequest('/api/content-package-upload',{zip_base64:await excelReadBase64(contentPackageFile)});
+  const rows=Array.isArray(result.rows)?result.rows:[];const files=Array.isArray(result.files)?result.files:[];
+  if(!rows.length)throw Error('등록 가능한 엑셀 콘텐츠가 없습니다.');
+  const byNo=new Map();const byWord=new Map();const byKey=new Map();const byName=new Map();
+  files.forEach((f,i)=>{
+   const n=leadingImageNumber(f.filename);
+   if(n!==null)byNo.set(n,f);else if(files.length===rows.length)byNo.set(i+1,f);
+   const w=imageWordKey(f.filename);if(w)byWord.set(w,f);
+   const kk=imageFileKey(f.filename);if(kk)byKey.set(kk,f);
+   byName.set(f.filename,f);
+  });
+  const known=new Map(cards.map(c=>[excelKey(c),c]));
+  const additions=[];const updates=[];const skipped=[];const stamp=Date.now();
+  for(let i=0;i<rows.length;i++){
+   const x=rows[i];const ck=excelKey(x).replace(/\s/g,'');
+   const f=byName.get(String(x.image_file||''))||byKey.get(ck)||byNo.get(i+1)||byWord.get(String(x.word||'').trim().toLowerCase());
+   if(!f){skipped.push(`${i+1}. ${x.word}: 이미지 없음`);continue;}
+   const k=excelKey(x);const existing=known.get(k);
+   if(existing?.status==='published'){skipped.push(`${i+1}. ${x.word}: 이미 공개됨`);continue;}
+   const spoken=(x.speech||'').split(/\s+\/\s+/)[0].trim().replace(/^[“"']|[”"']$/g,'');
+   const pos=api.posFor(x.word,x.meaning);const stressMark=String(x.stress_mark||'').trim();
+   const base={word:x.word,pos,ipa:x.ipa,hangul:x.hangul,meaning:x.meaning,stressMark,stress:api.parseStressMark(stressMark,x.word)||[0,0],
+    mnemonic:x.mnemonic,scene:x.scene,sceneSpeech:spoken,speechRequired:!!spoken,sceneImage:f.image,image:'',example:x.example,translation:x.translation,
+    notes:'패키지 ZIP 등록 · 하단 설명: '+x.footer+' · 강세는 엑셀 값 사용',status:'draft',scores:[0,0,0,0],flags:[],sourceChecked:false,imageChecked:true,speechChecked:!!spoken,sceneImageMode:'clean',
+    sceneCandidates:[{path:f.image,mode:'clean',source:'검증 완료 콘텐츠 패키지 ZIP',date:new Date().toISOString(),imageReview:{passed:true,method:'administrator-reviewed-package'}}],
+    history:[],excelImport:{footer:x.footer,dialogue:x.speech,sourceRow:x.excel_row,stressMark,packageImport:true}};
+   if(existing){Object.assign(existing,base);existing.history=Array.isArray(existing.history)?existing.history:[];existing.history.push({kind:'content-package-update',date:new Date().toISOString(),newImage:f.image,filename:f.filename});updates.push(existing);}
+   else{const card={id:'package-'+stamp+'-'+i,...base};card.history.push({kind:'content-package-import',date:new Date().toISOString(),newImage:f.image,filename:f.filename});additions.push(card);known.set(k,card);}
+  }
+  if(!additions.length&&!updates.length)throw Error('새로 등록하거나 갱신할 카드가 없습니다. '+skipped.slice(0,3).join(' / '));
+  const before=JSON.stringify(cards);cards=[...additions,...cards];selected=(additions[0]||updates[0]).id;
+  if(!await write({skipRender:true})){cards=JSON.parse(before);throw Error('클라우드 저장에 실패했습니다. 기존 상태를 복원했습니다.');}
+  $('contentPackageStatus').textContent=`완료 · 신규 ${additions.length}개 · 기존 초안 갱신 ${updates.length}개 · 건너뜀 ${skipped.length}개 · 자동 공개 없음`;
+  contentPackageFile=null;$('contentPackageZip').value='';render();excelRefreshPending();
+ }catch(err){$('contentPackageStatus').textContent='패키지 등록 실패: '+err.message;}
+ finally{$('contentPackageZip').disabled=false;$('contentPackageUpload').disabled=!contentPackageFile;}
+}
+$('contentPackageUpload').onclick=runContentPackageImport;
+$('contentPackagePathUpload').onclick=async()=>{
+ const raw=String($('contentPackagePath').value||'').trim().replace(/^\/+/,'');
+ if(!raw)return alert('서버에 둔 ZIP 경로를 입력하세요. 예: test_packages/unit1_1_package.zip');
+ try{
+  const res=await fetch('/'+encodeURI(raw));
+  if(!res.ok)throw Error('서버에서 ZIP을 찾을 수 없습니다. (HTTP '+res.status+')');
+  const blob=await res.blob();
+  if(blob.size>50*1024*1024)throw Error('ZIP이 50MB를 넘습니다.');
+  contentPackageFile=new File([blob],raw.split('/').pop()||'package.zip',{type:'application/zip'});
+  $('contentPackageStatus').textContent=`서버 ZIP 불러옴: ${contentPackageFile.name} (${(blob.size/1024/1024).toFixed(1)}MB)`;
+  await runContentPackageImport();
+ }catch(err){$('contentPackageStatus').textContent='서버 경로 등록 실패: '+err.message;}
+};
+
+// v5.3.0: import administrator-reviewed images without re-running paid image generation/QA.
+let excelZipFile=null;
+$('excelImageZip').onchange=e=>{
+ excelZipFile=e.target.files?.[0]||null;
+ const btn=$('excelImageZipUpload');
+ if(!excelZipFile){btn.disabled=true;$('excelImageZipStatus').textContent='ZIP 파일을 선택하세요.';return;}
+ if(!/\.zip$/i.test(excelZipFile.name)||excelZipFile.size>50*1024*1024){
+  excelZipFile=null;btn.disabled=true;$('excelImageZipStatus').textContent='50MB 이하의 .zip 파일만 가능합니다.';return;
+ }
+ btn.disabled=false;
+ const imported=cards.filter(c=>c.excelImport).length;
+ $('excelImageZipStatus').textContent=`선택: ${e.target.files[0].name} · 엑셀 등록 카드 ${imported}개. 파일명의 영어 단어 또는 001_ 순번으로 자동 매칭합니다.`;
+};
+function excelOrderedCards(){
+ return cards.filter(c=>c.excelImport).slice().sort((a,b)=>Number(a.excelImport?.sourceRow||999999)-Number(b.excelImport?.sourceRow||999999));
+}
+function leadingImageNumber(name){
+ const m=String(name||'').match(/^(\d{1,3})(?:[\s_.-]|$)/);return m?Number(m[1]):null;
+}
+// v5.3.1: 최종 이미지 파일명 규칙(영어단어_핵심뜻.png) 지원. 예: urgent_긴급한.png
+function imageWordKey(name){
+ const stem=String(name||'').replace(/\.[A-Za-z0-9]+$/,'').split(/[_\s-]/)[0]||'';
+ return stem.trim().toLowerCase();
+}
+// 같은 단어가 뜻별로 여러 카드일 때(예: core|속, core|핵심) 파일명으로 구분
+function imageFileKey(name){
+ const stem=String(name||'').replace(/\.[A-Za-z0-9]+$/,'');
+ const i=stem.search(/[_\s-]/);
+ if(i<0)return '';
+ const word=stem.slice(0,i).trim().toLowerCase();
+ const meaning=stem.slice(i+1).trim().toLowerCase().replace(/[\s-]+/g,' ');
+ return word ? (word+'|'+meaning).replace(/\s/g,'') : '';
+}
+$('excelImageZipUpload').onclick=async()=>{
+ if(!excelZipFile||cloudSaving||excelImageRunning)return;
+ const ordered=excelOrderedCards();
+ if(!ordered.length)return alert('먼저 엑셀로 등록된 카드를 불러오거나 등록해 주세요.');
+ const btn=$('excelImageZipUpload');btn.disabled=true;$('excelImageZip').disabled=true;
+ $('excelImageZipStatus').textContent='이미지 ZIP 업로드·검사 중…';
+ try{
+  const result=await batchRequest('/api/scene-zip-upload',{zip_base64:await excelReadBase64(excelZipFile)});
+  const files=Array.isArray(result.files)?result.files:[];
+  const mappings=[];const errors=[];const used=new Set();
+  for(let i=0;i<files.length;i++){
+   const f=files[i];const n=leadingImageNumber(f.filename);let card=null;
+   if(n!==null && n>=1 && n<=ordered.length)card=ordered[n-1];
+   else{
+    const kk=imageFileKey(f.filename);
+    if(kk)card=ordered.find(c=>excelKey(c).replace(/\s/g,'')===kk)||null;
+    const w=imageWordKey(f.filename);
+    if(!card&&w)card=ordered.find(c=>String(c.word||'').trim().toLowerCase()===w)||null;
+    if(!card && files.length===ordered.length)card=ordered[i];
+   }
+   if(!card){errors.push(`${f.filename}: 영어 단어명 또는 엑셀 순번을 찾을 수 없음`);continue;}
+   if(used.has(card.id)){errors.push(`${f.filename}: 같은 카드에 중복 연결됨`);continue;}
+   used.add(card.id);mappings.push({file:f,card});
+  }
+  if(errors.length)throw Error('자동 매칭 실패\n'+errors.slice(0,8).join('\n'));
+  if(!mappings.length)throw Error('매칭할 이미지가 없습니다.');
+  const published=mappings.filter(x=>x.card.status==='published').length;
+  const apply=mappings.filter(x=>x.card.status!=='published');
+  if(!apply.length)throw Error('매칭된 카드가 모두 이미 공개 상태입니다. 공개 카드는 자동 교체하지 않습니다.');
+  if(!confirm(`${apply.length}장의 검증 완료 이미지를 해당 엑셀 카드에 연결할까요?${published?`\n이미 공개된 ${published}개 카드는 건너뜁니다.`:''}\nAI 생성·AI QA는 실행하지 않고 자동 공개도 하지 않습니다.`)){
+   $('excelImageZipStatus').textContent='이미지는 서버 후보 저장소에만 올라갔고 카드에는 연결하지 않았습니다.';return;
+  }
+  const before=JSON.stringify(cards);
+  const now=new Date().toISOString();
+  for(const {file,card} of apply){
+   card.sceneCandidates=Array.isArray(card.sceneCandidates)?card.sceneCandidates:[];
+   card.sceneCandidates.push({path:file.image,mode:'clean',source:'채팅 검증 완료 이미지 ZIP',date:now,imageReview:{passed:true,method:'administrator-reviewed-external'}});
+   card.sceneImage=file.image;card.sceneImageMode='clean';card.imageChecked=true;
+   if(card.sceneSpeech)card.speechChecked=true;
+   card.history=Array.isArray(card.history)?card.history:[];
+   card.history.push({kind:'reviewed-image-zip-import',date:now,newImage:file.image,filename:file.filename});
+   if(card.batchSuggestion?.imageError)delete card.batchSuggestion.imageError;
+   delete card.excelImageHold;
+  }
+  if(!await write({skipRender:true})){
+   cards=JSON.parse(before);throw Error('카드 저장에 실패했습니다. 기존 카드 상태를 복원했습니다.');
+  }
+  selected=apply[0].card.id;
+  $('excelImageZipStatus').textContent=`등록 완료 ${apply.length}장${published?` · 공개 카드 ${published}장 건너뜀`:''}. AI 재생성/QA 없음 · 자동 공개 없음. 최종 카드만 확인 후 승인 및 공개하세요.`;
+  excelZipFile=null;$('excelImageZip').value='';render();
+ }catch(err){$('excelImageZipStatus').textContent='ZIP 등록 실패: '+err.message;}
+ finally{$('excelImageZip').disabled=false;$('excelImageZipUpload').disabled=!excelZipFile;}
+};
+$('batchPrepareStarter').onclick=async()=>{
+ // No CSV upload and no paid AI requests. The administrator explicitly authorizes the DB write.
+ const text='\uFEFF'+[CSV_COLUMNS,...ONECUT_STARTER_ROWS].map(r=>r.map(csvCell).join(',')).join('\r\n');
+ let analysis;try{analysis=bulkCsvAnalyze(text);}catch(err){alert('테스트 단어 검사 오류: '+err.message);return;}
+ if(!analysis.valid.length){batchMessage(`새로 등록할 테스트 단어가 없습니다. 기존/중복 ${analysis.duplicates}개. 기존 초안을 선택해 AI 제작을 시작하세요.`);renderBatchSelection();return;}
+ await bulkCommitCandidates(analysis,true);
+};
+
+$('migrateLocal').onclick=async()=>{
+ if(!OneCutCloud.enabled)return;
+ const local=api.load();
+ if(!Array.isArray(local)||!local.length)return alert('이 브라우저에 로컬 카드가 없습니다.');
+ if(cards.length)return alert('클라우드에 이미 카드가 있습니다. 중복/덮어쓰기 방지를 위해 자동 이전을 중단했습니다.');
+ if(!confirm(`기존 로컬 카드 ${local.length}개를 빈 클라우드로 최초 이전할까요?\n원본 JSON 백업을 먼저 보관하세요.\n기존 공개/반려 상태를 변경하지 않습니다.\n누락된 이미지가 있다면 별도로 안내합니다.`))return;
+ try{const result=await OneCutCloud.migrate(local);cards=await OneCutCloud.loadAdmin();selected=cards[0]?.id;$('migrateLocal').hidden=cards.length>0;render();showCloudState('로컬 카드 이전 완료');const missing=result.missing_images||[];alert(`이전 완료: ${cards.length}개 카드 / 이미지 업로드 ${result.uploaded_images||0}건.\n원래 공개 상태는 보존됐습니다.`+(missing.length?`\n누락된 이미지 ${missing.length}건:\n${missing.slice(0,12).join('\n')}\n이전 폴더의 assets/generated 파일을 복사한 뒤 보완하세요.`:'\n이미지 경로 점검도 진행하세요.'));}
+ catch(err){alert('이전 실패: '+err.message+'\n기존 로컬 데이터는 그대로 보존됩니다.');}
+ };
+ $('imageAuditAll').onclick=auditAllImagePaths;$('backup').onclick=()=>{const b=new Blob([JSON.stringify(cards,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='onecut_cards_backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)};$('import').onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{const d=JSON.parse(await file.text());if(!Array.isArray(d)||!d.every(x=>typeof x.id==='string'&&typeof x.word==='string'&&Array.isArray(x.scores)&&Array.isArray(x.stress)))throw Error('지원하지 않는 카드 JSON 형식');if(!confirm('현재 카드 목록을 백업 데이터로 교체할까요?'))return;cards=d;selected=cards[0]?.id;write()}catch(err){alert('가져오기 실패: '+err.message)}finally{e.target.value=''}};
+document.addEventListener('click',e=>{
+ const opener=e.target.closest('[data-preview-image]');if(opener){e.preventDefault();openScenePreview(Number(opener.dataset.previewImage));}
+ if(e.target.closest('[data-close-preview]'))closeScenePreview();
+});
+
+let studentOverview=[];
+function formatAdminDate(value){if(!value)return '-';const d=new Date(value);if(Number.isNaN(d.getTime()))return '-';return d.toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+function renderStudentOverview(){
+ const rows=$('studentRows');if(!rows)return;
+ const q=String($('studentSearch')?.value||'').trim().toLowerCase(),filter=$('studentFilter')?.value||'all';
+ let list=studentOverview.filter(s=>{const match=!q||String(s.email||s.label||s.user_id||'').toLowerCase().includes(q);if(!match)return false;if(filter==='attention')return s.weak>0||s.due>0;if(filter==='active')return s.today>0;if(filter==='mastered')return s.mastered>0;return true});
+ if(!list.length){rows.innerHTML='<tr><td colspan="9" class="small">조건에 맞는 학생이 없습니다.</td></tr>';return}
+ rows.innerHTML=list.map(s=>`<tr class="${s.weak>0||s.due>0?'student-needs-attention':''}"><td><b>${api.escape(s.email||s.label||'학생')}</b>${s.email?'':'<br><span class="small">'+api.escape(String(s.user_id||'').slice(0,12))+'</span>'}</td><td>${Number(s.today)||0}개</td><td>${Number(s.learned)||0}${s.total_words?' / '+Number(s.total_words):''}</td><td><b>${Number(s.mastered)||0}개</b><br><span class="small">${Number(s.mastery_rate)||0}%</span></td><td>${s.accuracy==null?'-':Number(s.accuracy)+'%'}</td><td>${s.weak?'<span class="tag rejected">'+Number(s.weak)+'개</span>':'0'}</td><td>${s.due?'<span class="tag review">'+Number(s.due)+'개</span>':'0'}</td><td>${api.escape(formatAdminDate(s.last_active))}</td><td><button class="btn" type="button" data-student-detail="${api.escape(s.user_id)}">상세</button></td></tr>`).join('');
+}
+let studentDetail=null;
+function studentStatusLabel(x){return x.status==='mastered'?'완전 암기':x.status==='weak'?'취약':x.status==='due'?'복습 지연':x.status==='learning'?'암기 진행':'미학습'}
+function renderStudentWordCards(list,target){$(target).innerHTML=list.length?list.map(x=>`<div class="student-word-card"><b>${api.escape(x.word)}</b><span>${api.escape(x.meaning||'')}</span><small>${studentStatusLabel(x)} · 망각 ${Number(x.lapses)||0}회 · ${x.due?'복습 지연':'다음 '+api.escape(formatAdminDate(x.next_review))}</small></div>`).join(''):'<p class="small">해당 단어가 없습니다.</p>'}
+function renderStudentDetail(data){studentDetail=data;nextRecommendation=null;if($('recommendationBox'))$('recommendationBox').innerHTML='<p class="small">추천 만들기를 누르면 학생의 현재 기록을 분석합니다.</p>';if($('approveRecommendation'))$('approveRecommendation').disabled=true;const s=data.student||{},x=data.summary||{},p7=data.periods?.days7||{},p30=data.periods?.days30||{};$('studentDetailPanel').hidden=false;$('studentDetailTitle').textContent=(s.email||s.label||'학생')+' · 상세 학습분석';$('studentDetailMeta').textContent='학생 ID '+String(s.user_id||'').slice(0,16)+' · 최근 동기화 '+formatAdminDate(s.updated_at);$('studentDetailSummary').innerHTML=`<div><b>${Number(x.learned)||0}</b><span>누적 학습</span></div><div><b>${Number(x.mastered)||0}</b><span>완전 암기 · ${Number(x.mastery_rate)||0}%</span></div><div><b>${Number(x.weak)||0}</b><span>취약단어</span></div><div><b>${Number(x.due)||0}</b><span>복습 지연</span></div><div><b>${Number(x.total_words)||0}</b><span>공개 단어</span></div>`;$('student7Accuracy').textContent=p7.accuracy==null?'-':p7.accuracy+'%';$('student7Meta').textContent=`평가 ${p7.events||0}회 · 학습일 ${p7.active_days||0}일`;$('student30Accuracy').textContent=p30.accuracy==null?'-':p30.accuracy+'%';$('student30Meta').textContent=`평가 ${p30.events||0}회 · 학습일 ${p30.active_days||0}일`;const daily=Array.isArray(data.daily)?data.daily:[],max=Math.max(1,...daily.map(d=>Number(d.events)||0));$('studentTrend').innerHTML=daily.map(d=>`<div class="trend-day" title="${api.escape(d.date)} · ${Number(d.events)||0}회 · ${d.accuracy==null?'정답률 없음':d.accuracy+'%'}"><i style="height:${Math.max(3,Math.round((Number(d.events)||0)/max*100))}%"></i></div>`).join('');renderStudentWordCards(data.weak_top||[],'studentWeakTop');renderStudentWordCards(data.recent_wrong||[],'studentRecentWrong');$('studentWordRows').innerHTML=(data.words||[]).map(w=>`<tr><td><b>${api.escape(w.word)}</b><br><span class="small">${api.escape(w.meaning||'')}</span></td><td>${studentStatusLabel(w)}</td><td>${Number(w.attempts)||0}회</td><td>${Number(w.success_streak)||0}</td><td>${Number(w.lapses)||0}</td><td>${Number(w.interval_days)||0}일</td><td>${w.due?'<span class="tag rejected">지연</span> ':''}${api.escape(formatAdminDate(w.next_review))}</td></tr>`).join('')||'<tr><td colspan="7" class="small">학습 기록이 없습니다.</td></tr>';$('studentDetailPanel').scrollIntoView({behavior:'smooth',block:'start'});}
+async function loadStudentDetail(uid){if(!uid||!OneCutCloud.token)return;const note=$('studentOverviewNote');note.textContent='학생 상세 학습기록을 분석하고 있습니다.';try{const data=await OneCutCloud.request('/api/admin/students/'+encodeURIComponent(uid));renderStudentDetail(data);note.textContent='취약 Top 10은 최근 오답·망각·복습 지연을 함께 반영한 우선순위입니다.';}catch(err){note.textContent='학생 상세 조회 실패: '+err.message}}
+async function loadStudentOverview(){
+ const btn=$('loadStudentOverview'),note=$('studentOverviewNote');if(!btn)return;
+ if(!OneCutCloud.enabled||!OneCutCloud.token){note.textContent='관리자 클라우드 로그인이 필요합니다.';return}
+ const old=btn.textContent;btn.disabled=true;btn.textContent='불러오는 중…';note.textContent='학생 학습기록을 집계하고 있습니다.';
+ try{const data=await OneCutCloud.request('/api/admin/students');studentOverview=Array.isArray(data.students)?data.students:[];const x=data.summary||{};$('studentSummary').innerHTML=`<div><b>${Number(x.students)||0}</b><span>전체 학생</span></div><div><b>${Number(x.active_today)||0}</b><span>오늘 학습</span></div><div><b>${Number(x.need_attention)||0}</b><span>관리 필요</span></div><div><b>${Number(x.mastered_total)||0}</b><span>완전 암기 합계</span></div><div><b>${Number(x.published_words)||0}</b><span>공개 단어</span></div>`;renderStudentOverview();assignmentTargets();note.textContent='취약단어 또는 복습 대기가 있는 학생을 먼저 표시합니다. 학생의 학습기록은 이 화면에서 수정하지 않습니다.';}catch(err){studentOverview=[];renderStudentOverview();note.textContent='학생 현황 조회 실패: '+err.message}finally{btn.disabled=false;btn.textContent=old}
+}
+$('loadStudentOverview').onclick=loadStudentOverview;$('studentSearch').oninput=renderStudentOverview;$('studentFilter').onchange=renderStudentOverview;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-student-detail]');if(b)loadStudentDetail(b.dataset.studentDetail)});$('closeStudentDetail').onclick=()=>{$('studentDetailPanel').hidden=true;studentDetail=null};$('exportWeakWords').onclick=()=>{if(!studentDetail)return;const rows=[['단어','품사','뜻','상태','망각횟수','다음복습'],...(studentDetail.weak_top||[]).map(x=>[x.word,x.pos,x.meaning,studentStatusLabel(x),x.lapses,x.next_review])];const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='onecut_weak_words.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+
+
+let nextRecommendation=null;
+function renderRecommendation(rec){nextRecommendation=rec||null;const box=$('recommendationBox'),btn=$('approveRecommendation');if(!rec||!Array.isArray(rec.card_ids)||!rec.card_ids.length){box.innerHTML='<p class="small">추천할 수 있는 단어가 없습니다. 공개 단어 또는 학생 학습기록을 확인하세요.</p>';btn.disabled=true;return}const w=Array.isArray(rec.weak)?rec.weak:[],n=Array.isArray(rec.new)?rec.new:[];box.innerHTML=`<div class="queue-summary"><div><b>${rec.count||0}</b><span>추천 단어</span></div><div><b>${w.length}</b><span>취약 복습</span></div><div><b>${n.length}</b><span>신규 단어</span></div></div><div class="student-word-cards">${[...w.map(x=>({...x,kind:'취약'})),...n.map(x=>({...x,kind:'신규'}))].map(x=>`<article><b>${api.escape(x.word||'')}</b><span>${api.escape(x.meaning||'')}</span><small><strong>${x.kind}</strong> · ${api.escape(x.reason||'')}</small></article>`).join('')}</div><p class="small">${api.escape(rec.policy||'')}</p>`;btn.disabled=false;}
+async function loadRecommendation(){if(!studentDetail?.student?.user_id)return;const btn=$('loadRecommendation'),old=btn.textContent;btn.disabled=true;btn.textContent='분석 중…';try{const count=$('recommendCount').value||'5';const rec=await OneCutCloud.request('/api/admin/recommendations/'+encodeURIComponent(studentDetail.student.user_id)+'?count='+encodeURIComponent(count));renderRecommendation(rec)}catch(err){nextRecommendation=null;$('recommendationBox').innerHTML='<p class="small">추천 생성 실패: '+api.escape(err.message)+'</p>';$('approveRecommendation').disabled=true}finally{btn.disabled=false;btn.textContent=old}}
+$('loadRecommendation').onclick=loadRecommendation;$('recommendCount').onchange=()=>{nextRecommendation=null;$('approveRecommendation').disabled=true;$('recommendationBox').innerHTML='<p class="small">단어 수를 변경했습니다. 추천을 다시 만들어 주세요.</p>'};
+$('approveRecommendation').onclick=async()=>{if(!nextRecommendation?.card_ids?.length||!studentDetail?.student?.user_id)return;const uid=studentDetail.student.user_id,count=nextRecommendation.card_ids.length;const who=studentDetail.student.email||studentDetail.student.label||'학생';if(!confirm(`${who}에게 추천 ${count}단어를 배정할까요?\n취약 ${nextRecommendation.summary?.weak||0} + 신규 ${nextRecommendation.summary?.new||0}`))return;const d=new Date(),title=`맞춤 추천 ${count}단어 · ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;try{await groupAction({action:'create_assignment',title,target_type:'student',target_id:uid,card_ids:nextRecommendation.card_ids});$('studentOverviewNote').textContent=`${who}에게 맞춤 추천 ${count}단어를 배정했습니다.`;$('approveRecommendation').disabled=true;if(OneCutCloud.token)await loadGroups()}catch(err){$('studentOverviewNote').textContent='추천 배정 실패: '+err.message}};
+
+
+let groupState={groups:[],assignments:[]};
+function assignmentTargets(){const type=$('assignmentTargetType')?.value||'group',sel=$('assignmentTarget');if(!sel)return;const opts=type==='group'?groupState.groups:studentOverview;sel.innerHTML=opts.map(x=>`<option value="${api.escape(x.id||x.user_id)}">${api.escape(x.name||x.email||x.label||String(x.user_id||'학생').slice(0,12))}</option>`).join('')||'<option value="">대상 없음</option>'}
+function assignmentStatusLabel(x){return x==='completed'?'완료':x==='attention'?'취약·복습 필요':x==='in_progress'?'학습 중':'미시작'}
+function renderAssignmentList(){const all=Array.isArray(groupState.assignments)?groupState.assignments:[],filter=$('assignmentProgressFilter')?.value||'active';let list=all.filter(a=>{const c=a.progress?.counts||{};if(filter==='active')return a.active!==false;if(filter==='incomplete')return a.active!==false&&((c.not_started||0)+(c.in_progress||0)+(c.attention||0)>0);if(filter==='attention')return (c.attention||0)>0;if(filter==='completed')return (c.students||0)>0&&(c.completed||0)===(c.students||0);return true});const totals=all.filter(a=>a.active!==false),assigned=totals.reduce((n,a)=>n+(a.progress?.counts?.students||0),0),complete=totals.reduce((n,a)=>n+(a.progress?.counts?.completed||0),0),attention=totals.reduce((n,a)=>n+(a.progress?.counts?.attention||0),0);$('assignmentSummary').innerHTML=`<div><b>${totals.length}</b><span>진행 중 세트</span></div><div><b>${assigned}</b><span>학생 배정</span></div><div><b>${complete}</b><span>완료</span></div><div><b>${attention}</b><span>취약·복습 필요</span></div>`;$('assignmentList').innerHTML=list.length?list.map(a=>{const p=a.progress||{},c=p.counts||{},students=Array.isArray(p.students)?p.students:[];return `<article class="assignment-card ${c.attention?'assignment-attention':''}"><div class="assignment-head"><div><b>${api.escape(a.title||'학습세트')}</b><small>${Array.isArray(a.card_ids)?a.card_ids.length:0}단어 · ${api.escape(a.target_type==='group'?'그룹':'학생')} 배정${a.due_at?' · 마감 '+api.escape(formatAdminDate(a.due_at)):''}</small></div><div class="assignment-actions"><span class="tag">평균 ${Number(p.average_completion)||0}%</span>${a.active===false?'<span class="tag">종료</span>':`<button class="btn" data-close-assignment="${api.escape(a.id)}">배정 종료</button>`}</div></div><div class="assignment-progress"><i style="width:${Math.max(0,Math.min(100,Number(p.average_completion)||0))}%"></i></div><div class="assignment-counts"><span>미시작 <b>${c.not_started||0}</b></span><span>학습 중 <b>${c.in_progress||0}</b></span><span>관리 필요 <b>${c.attention||0}</b></span><span>완료 <b>${c.completed||0}</b></span><span>평균 완전암기 <b>${Number(p.average_mastery)||0}%</b></span></div><details><summary>학생별 진행상태</summary><div class="assignment-students">${students.length?students.map(st=>`<div><span><b>${api.escape(st.email||String(st.user_id).slice(0,12))}</b><small>${assignmentStatusLabel(st.status)} · ${st.learned}/${st.total}단어 · 완전암기 ${st.mastered}</small></span><strong>${st.completion}%</strong></div>`).join(''):'<p class="small">배정 대상 학생이 없습니다.</p>'}</div></details></article>`}).join(''):'<p class="small">조건에 맞는 학습세트가 없습니다.</p>'}
+function renderGroups(){const box=$('groupCards');if(!box)return;box.innerHTML=groupState.groups.length?groupState.groups.map(g=>`<article class="group-card"><div class="row"><div><b>${api.escape(g.name)}</b><small>${g.members.length}명</small></div></div><div class="group-member-list">${g.members.map(m=>`<span>${api.escape(m.email||String(m.user_id).slice(0,12))}<button type="button" data-remove-member="${api.escape(g.id)}|${api.escape(m.user_id)}" aria-label="학생 제거">×</button></span>`).join('')||'<small>아직 학생이 없습니다.</small>'}</div><div class="group-add"><select data-member-select="${api.escape(g.id)}">${studentOverview.filter(s=>!g.members.some(m=>m.user_id===s.user_id)).map(s=>`<option value="${api.escape(s.user_id)}">${api.escape(s.email||s.label||String(s.user_id).slice(0,12))}</option>`).join('')}</select><button type="button" class="btn" data-add-member="${api.escape(g.id)}">학생 추가</button></div></article>`).join(''):'<p class="small">아직 만든 그룹이 없습니다.</p>';renderAssignmentList();assignmentTargets();}
+async function groupAction(payload){return OneCutCloud.request('/api/admin/groups/action',{method:'POST',body:JSON.stringify(payload)})}
+async function loadGroups(){const note=$('groupNote');if(!OneCutCloud.token){note.textContent='관리자 로그인이 필요합니다.';return}try{const d=await OneCutCloud.request('/api/admin/groups');groupState={groups:Array.isArray(d.groups)?d.groups:[],assignments:Array.isArray(d.assignments)?d.assignments:[]};renderGroups();note.textContent='그룹과 학습세트 정보를 불러왔습니다.'}catch(err){note.textContent='그룹 기능 준비 필요: '+err.message+' · database/07_groups_assignments.sql을 Supabase에서 1회 실행하세요.'}}
+$('loadGroups').onclick=loadGroups;$('assignmentProgressFilter').onchange=renderAssignmentList;$('createGroup').onclick=async()=>{const name=$('newGroupName').value.trim();if(!name)return;try{await groupAction({action:'create_group',name});$('newGroupName').value='';await loadGroups()}catch(err){$('groupNote').textContent='그룹 생성 실패: '+err.message}};
+$('assignmentTargetType').onchange=assignmentTargets;$('createAssignment').onclick=async()=>{const title=$('assignmentTitle').value.trim(),target_type=$('assignmentTargetType').value,target_id=$('assignmentTarget').value,count=Number($('assignmentCount').value)||10;const card_ids=cards.filter(c=>c.status==='published').slice(0,count).map(c=>c.id);if(!title||!target_id)return $('groupNote').textContent='세트 제목과 배정 대상을 확인하세요.';if(!card_ids.length)return $('groupNote').textContent='배정할 공개 단어가 없습니다.';try{await groupAction({action:'create_assignment',title,target_type,target_id,card_ids});await loadGroups();$('groupNote').textContent=`${card_ids.length}개 단어를 배정했습니다.`}catch(err){$('groupNote').textContent='배정 실패: '+err.message}};
+$('groupCards').onclick=async e=>{const add=e.target.closest('[data-add-member]'),rem=e.target.closest('[data-remove-member]');try{if(add){const gid=add.dataset.addMember,sel=document.querySelector(`[data-member-select="${CSS.escape(gid)}"]`);if(sel?.value)await groupAction({action:'add_member',group_id:gid,user_id:sel.value});}else if(rem){const [gid,uid]=rem.dataset.removeMember.split('|');await groupAction({action:'remove_member',group_id:gid,user_id:uid});}else return;await loadGroups()}catch(err){$('groupNote').textContent='학생 배정 변경 실패: '+err.message}};
+$('assignmentList').onclick=async e=>{const b=e.target.closest('[data-close-assignment]');if(!b)return;try{await groupAction({action:'deactivate_assignment',assignment_id:b.dataset.closeAssignment});await loadGroups()}catch(err){$('groupNote').textContent='배정 종료 실패: '+err.message}};
+
+window.addEventListener('storage',e=>{if(!OneCutCloud.enabled&&e.key===api.key)refresh()});
+// v4.6.1: small, explicit-cost, administrator-supervised production queue.
+// Candidates are drafts; no API result ever approves or publishes a card.
+const batchState={running:false,stop:false,results:[],selectedIds:new Set()};
+function batchEligible(card,mode){
+ if(!card||card.status==='published')return false;
+ if(!String(card.word||'').trim()||!String(card.pos||'').trim()||!String(card.ipa||'').trim()||!String(card.meaning||'').trim())return false;
+ if(mode==='image')return !!(card.rework?.mnemonicApproved && String(card.mnemonic||'').trim() && String(card.scene||'').trim());
+ if(mode==='retry')return !!((card.excelImport && String(card.mnemonic||'').trim() && String(card.scene||'').trim() && !card.sceneImage) || (card.batchSuggestion && (!card.sceneImage || card.batchSuggestion.score==null || card.batchSuggestion.imageError || card.batchSuggestion.imageReview?.passed===false)));
+ if(String(card.mnemonic||'').trim() && String(card.scene||'').trim())return false;
+ return !Array.isArray(card.rework?.candidates)||!card.rework.candidates.some(x=>typeof x==='object'&&String(x.mnemonic||'').trim());
+}
+function batchCandidates(){
+ const scope=$('batchScope').value;
+ return cards.filter(c=>scope==='retry'?batchEligible(c,'retry'):(batchEligible(c,'mnemonic') && (scope==='all'||c.status==='draft')));
+}
+function renderBatchSelection(){
+ if(batchState.running)return;
+ const list=batchCandidates();const limit=Number($('batchLimit').value);
+ const eligibleIds=new Set(list.map(c=>c.id));
+ batchState.selectedIds=new Set([...batchState.selectedIds].filter(id=>eligibleIds.has(id)));
+ if(batchState.selectedIds.size===0)list.slice(0,limit).forEach(c=>batchState.selectedIds.add(c.id));
+ $('batchSelection').innerHTML=list.slice(0,60).map(c=>`<label class="batch-chip"><input type="checkbox" data-batch-card="${api.escape(c.id)}" ${batchState.selectedIds.has(c.id)?'checked':''}><span><b>${api.escape(c.word)}</b><small>${api.escape(c.meaning)}</small></span></label>`).join('')||'<p class="small">제작 가능한 초안이 없습니다. 위의 ‘테스트 단어 10개 준비’를 누르면 CSV 없이 초안을 등록합니다. <button type="button" class="btn" id="batchOpenCsv">직접 CSV 등록</button></p>';
+ $('batchMnemonicStart').disabled=!list.length;
+ $('batchImageStart').disabled=!cards.some(c=>batchEligible(c,'image'));
+ updateQuickTarget();
+}
+function updateQuickTarget(){
+ const mode=$('batchScope').value;
+ const list=batchCandidates();const picked=list.find(c=>batchState.selectedIds.has(c.id))||list[0];
+ const note=$('quickTarget');
+ note.textContent=picked?`이번 제작 대상: ${picked.word} (${picked.meaning}) · ${mode==='retry'?'품질 개선 재시도':'신규 초안 제작'}`:
+    (mode==='retry'?'재작업 대상이 없습니다. “새 단어 자동 제작”을 선택하세요.':'새 초안이 없습니다. “고급 설정”에서 테스트 단어를 준비할 수 있습니다.');
+ $('quickStart').disabled=batchState.running||!picked;
+ $('quickRetry').setAttribute('aria-pressed',String(mode==='retry'));
+ $('quickNew').setAttribute('aria-pressed',String(mode!=='retry'));
+ $('quickRetry').classList.toggle('primary',mode==='retry');
+ $('quickNew').classList.toggle('primary',mode!=='retry');
+}
+function chooseQuickMode(mode){
+ if(batchState.running)return;
+ $('batchScope').value=mode;
+ $('batchLimit').value='1';
+ batchState.selectedIds.clear();
+ renderBatchSelection();
+}
+function batchMessage(txt){$('batchProgress').textContent=txt;}
+function renderBatchResults(){
+ const rows=batchState.results;
+ $('batchResults').innerHTML=rows.map(x=>`<tr><td><b>${api.escape(x.word)}</b></td><td>${api.escape(x.status)}</td><td>${x.id?`<button type="button" class="btn" data-batch-open="${api.escape(x.id)}">확인</button>`:''}</td></tr>`).join('')||'<tr><td colspan="3" class="small">작업 기록 없음</td></tr>';
+ const summary=$('batchRunSummary');
+ if(!summary)return;
+ if(!rows.length){summary.hidden=true;summary.innerHTML='';return;}
+ const ready=rows.filter(x=>/공개 검수 대기|이미지 후보 저장|자동선정·웹툰/.test(x.status)).length;
+ const hold=rows.filter(x=>/품질 미달|QA 미통과|재검토|이미지 실패/.test(x.status)).length;
+ const fail=rows.filter(x=>/^실패:/.test(x.status)).length;
+ summary.hidden=false;summary.innerHTML=`<b>이번 묶음 ${rows.length}개</b><span>검수 대기 ${ready} · 보류/재작업 ${hold} · 요청 실패 ${fail}</span>`;
+}
+function quickReviewCandidates(){
+ return cards.filter(c=>['draft','review','approved','rejected'].includes(c.status) && c.batchSuggestion && (c.sceneImage || c.batchSuggestion?.score!=null || c.batchSuggestion?.vetoReason || c.batchSuggestion?.imageError))
+  .sort((a,b)=>queuePriority(b,productionStage(b)).score-queuePriority(a,productionStage(a)).score||String(b.batchSuggestion?.date||'').localeCompare(String(a.batchSuggestion?.date||'')));
+}
+function quickReviewSummary(){
+ const q=quickReviewCandidates();
+ return {total:q.length,images:q.filter(c=>!!c.sceneImage).length,holds:q.filter(c=>!c.sceneImage||c.batchSuggestion?.vetoReason||c.batchSuggestion?.imageError).length};
+}
+function renderQuickReview(){
+ const panel=$('quickReviewPanel');if(!panel)return;
+ const queue=quickReviewCandidates(), c=queue[0];
+ if(!c){panel.hidden=true;panel.innerHTML='';return;}
+ const info=c.batchSuggestion||{}, summary=quickReviewSummary();
+ const score=info.score==null?'보류':`${Number(info.score)}/100`; const imageQa=info.imageReview?.total!=null?` · 이미지 ${Number(info.imageReview.total)}/100`:'';
+ const qaState=info.imageReview?.passed===true?'이미지 QA 통과':info.imageReview?.passed===false?'이미지 QA 미통과':c.sceneImage?'이미지 QA 확인 필요':'이미지 없음';
+ const publishReady=c.pos!=='미확인' && !!c.sceneImage && c.sceneImageMode==='clean' && info.imageReview?.passed===true && !info.vetoReason && !info.imageError && ['word','pos','ipa','meaning','mnemonic','scene','example','translation'].every(k=>String(c[k]||'').trim()) && Array.isArray(c.stress) && c.stress.length===2 && c.stress.every(Number.isInteger) && c.stress[0]>=0 && c.stress[1]<=c.word.length && c.stress[1]>c.stress[0];
+ const img=c.sceneImage?`<div class="quick-review-image"><img src="${api.escape(c.sceneImage)}" alt="${api.escape(c.word)} 자동 생성 웹툰" loading="lazy"></div>`:'<div class="quick-review-empty">이미지 없음<br><small>발음·뜻 검수 미통과 또는 이미지 생성 실패</small></div>';
+ panel.hidden=false;
+ panel.innerHTML=`<div class="quick-review-summary"><b>검수 대기 ${summary.total}개</b><span>이미지 완료 ${summary.images} · 재작업 필요 ${summary.holds}</span></div><div class="quick-review-head"><div><span class="eyebrow">최종 검수 1 / ${queue.length}</span><h3>${api.escape(c.word)} <small>${api.escape(c.meaning||'')}</small></h3><span class="quick-qa-state">${api.escape(qaState)}</span></div><span class="review-score">${api.escape(score+imageQa)}</span></div><div class="quick-review-grid">${img}<div class="quick-review-copy"><b>AI 추천 연상</b><p>${api.escape(c.mnemonic||info.candidate||'통과 후보 없음')}</p><b>장면</b><p>${api.escape(c.scene||info.vetoReason||'이미지 제작 전 재검토 필요')}</p><div class="controls"><button type="button" class="btn primary" data-quick-publish="${api.escape(c.id)}" ${publishReady?'':'disabled title="이미지 QA 통과 및 오류 해소 후 공개할 수 있습니다."'}>공개</button><button type="button" class="btn" data-quick-retry="${api.escape(c.id)}">재생성</button><button type="button" class="btn danger" data-quick-reject="${api.escape(c.id)}">반려</button><button type="button" class="btn ghost" data-quick-open="${api.escape(c.id)}">상세보기</button></div><p class="small">공개·반려 후 다음 검수 카드가 자동으로 표시됩니다.</p></div></div>`;
+ void hydrateCloudImages();
+}
+async function quickPublishCard(c){
+ if(!c)return;
+ const required=['word','pos','ipa','meaning','mnemonic','scene','sceneImage'];
+ const missing=required.filter(k=>!String(c[k]||'').trim());
+ if(missing.length)return alert('공개 필수 입력값이 없습니다: '+missing.join(', '));
+ if(c.pos==='미확인')return alert('품사가 확인되지 않았습니다. 상세보기에서 품사를 지정하세요.');
+ const stress=c.stress;
+ if(!Array.isArray(stress)||stress.length!==2||!stress.every(Number.isInteger)||stress[0]<0||stress[1]>c.word.length||stress[1]<=stress[0])return alert('영단어 강세 위치를 확인해 주세요.');
+ if(c.sceneImageMode!=='clean')return alert('장면 이미지가 검수 가능한 clean 모드가 아닙니다. 상세보기에서 확인해 주세요.');
+ try{if(!await verifiedImage(c.sceneImage))return alert('공개 이미지 파일을 불러올 수 없습니다. 상세보기에서 이미지를 확인해 주세요.');}catch(err){return alert('이미지 검사 오류: '+err.message)}
+ const info=c.batchSuggestion||{};
+ if(info.imageReview?.passed!==true || info.vetoReason || info.imageError)return alert('이미지 QA 통과 및 제작 오류 해소 후 공개할 수 있습니다. 재생성 또는 상세보기를 이용하세요.');
+ const q=info.imageReview?.total!=null?` · 이미지QA ${info.imageReview.total}/100`:'';
+ if(!confirm(`‘${c.word} (${c.pos})’을 학생에게 공개할까요?\n\n연상 ${info.score==null?'미평가':info.score+'/100'}${q}\n\n현재 카드의 발음·뜻·연상문장·이미지를 확인했다면 공개하세요.`))return;
+ const before=JSON.parse(JSON.stringify(c));
+ c.sourceChecked=true;c.imageChecked=true;c.speechChecked=true;c.status='published';c.flags=[];c.rework=null;
+ c.history=Array.isArray(c.history)?c.history:[];const now=new Date().toISOString();
+ c.history.push({kind:'quick-admin-approved',date:now,image:c.sceneImage,qualityScore:info.score??null,imageQa:info.imageReview?.total??null});
+ c.history.push({kind:'student-published',date:now,image:c.sceneImage});
+ const ok=await write({skipRender:true});
+ if(!ok){Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,before);return alert('공개 저장에 실패했습니다. 기존 상태를 유지합니다.');}
+ await recordResearchFeedback(c,'success','관리자가 최종 검수 후 공개 승인');
+ render();
+}
+function renderSavedBatchResults(){
+ const items=cards.filter(c=>c.batchSuggestion && typeof c.batchSuggestion==='object')
+   .sort((a,b)=>String(b.batchSuggestion.date||'').localeCompare(String(a.batchSuggestion.date||''))).slice(0,60);
+ const target=$('savedBatchResults');if(!target)return;renderQuickReview();
+ target.innerHTML=items.map(c=>{
+   const info=c.batchSuggestion;
+   const attempts=info.attemptCount?` · ${info.attemptCount}차 시도`:''; const imageQa=info.imageReview?.total!=null?` · 이미지QA ${info.imageReview.total}/100`:'';
+   const label=c.status==='published'?'기존 공개 · 내용 확인 필요':
+       info.vetoReason?'재검토 필요 · '+info.vetoReason:
+       (c.excelImport && !c.sceneImage && !info.imageError)?'엑셀 문장 확정 · 이미지 생성 대기':
+       info.score==null?'품질 미달 · 보류':
+       info.imageError?'이미지 생성/QA 재검토':
+       c.sceneImage?'자동 제작 완료 · 관리자 공개 대기':'이미지 생성 대기';
+   return `<tr><td><b>${api.escape(c.word)}</b></td><td>${api.escape(label)}${api.escape(attempts+imageQa)}${info.score==null?'':` · ${api.escape(info.score)}/100`}</td><td>${c.sceneImage?'경로 기록 · 실제 그림 확인 필요':'없음'}</td><td><button type="button" class="btn" data-batch-open="${api.escape(c.id)}">검토</button></td></tr>`;
+ }).join('')||'<tr><td colspan="4" class="small">저장된 자동 제작 결과가 없습니다.</td></tr>';
+}
+function batchSetRunning(active){batchState.running=active;$('quickStart').disabled=active;$('quickRetry').disabled=active;$('quickNew').disabled=active;$('batchMnemonicStart').disabled=active;$('batchImageStart').disabled=active;$('batchStop').disabled=!active;$('batchScope').disabled=active;$('batchLimit').disabled=active;}
+async function batchRequest(endpoint,data){
+ const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json',...(OneCutCloud.enabled?{'Authorization':'Bearer '+OneCutCloud.token}:{})},body:JSON.stringify(data)});
+ let d={};try{d=await r.json()}catch{throw Error('서버가 JSON을 반환하지 않았습니다.')}if(!r.ok)throw Error(d.error||('HTTP '+r.status));return d;
+}
+async function recordResearchFeedback(c,verdict,reason=''){
+ if(!c||!c.word||!c.mnemonic)return;
+ const info=c.batchSuggestion||{};
+ const anchor=info?.strictReview?.evidence?.anchor||info?.anchor||'';
+ try{await batchRequest('/api/research/feedback',{verdict,word:c.word,pos:c.pos||'',ipa:c.ipa||'',meaning:c.meaning||'',anchor,mnemonic:c.mnemonic||'',scene:c.scene||'',reason:String(reason||'').slice(0,420),tags:[verdict==='success'?'admin-approved':'admin-rejected']});}
+ catch(err){console.warn('연상 연구 사례 저장 실패',err);}
+}
+function batchBackup(){
+ const data=new Blob([JSON.stringify(cards,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='onecut_before_batch_v4_6_1.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+function batchResult(id,word,status){
+ const item={id,word,status};const index=batchState.results.findIndex(x=>x.id===id);if(index>=0)batchState.results[index]=item;else batchState.results.push(item);renderBatchResults();
+}
+async function generateExcelImageOnly(card){
+ // Curated Excel rows already contain the administrator-approved mnemonic/scene.
+ // Never regenerate or re-score the mnemonic here; produce exactly one paid image and one QA pass.
+ if(!card?.excelImport || !String(card.mnemonic||'').trim() || !String(card.scene||'').trim())return false;
+ card.sceneCandidates=Array.isArray(card.sceneCandidates)?card.sceneCandidates:[];
+ card.history=Array.isArray(card.history)?card.history:[];
+ card.batchSuggestion={...(card.batchSuggestion||{}),excelImported:true,date:new Date().toISOString()};
+ batchMessage(`${card.word} (${card.meaning}) · 엑셀 확정 문장 유지 · 웹툰 이미지 생성 중…`);
+ const imageResult=await batchRequest('/api/image',payload(card));
+ if(!imageResult.image||typeof imageResult.image!=='string')throw Error('이미지 경로 누락');
+ const path=imageResult.image;
+ batchMessage(`${card.word} (${card.meaning}) · 이미지 생성 완료 · AI 품질검사 중…`);
+ let review;
+ try{review=await batchRequest('/api/image-review',{...payload(card),image:path});}
+ catch(err){review={passed:false,total:null,issues:['AI 품질검사 실패: '+String(err.message||err)],retryFeedback:''};}
+ card.sceneCandidates.push({path,mode:'clean',source:`엑셀 확정 문장 · 이미지 QA ${review.passed?'통과':'재검토'}`,date:new Date().toISOString(),imageReview:review});
+ card.history.push({kind:'excel-generated-image',date:new Date().toISOString(),newImage:path,reviewPassed:review.passed===true,reviewScore:review.total??null});
+ card.batchSuggestion.imageReview=review;
+ delete card.batchSuggestion.vetoReason;
+ delete card.batchSuggestion.imageError;
+ if(review.passed===true){
+   card.sceneImage=path;card.sceneImageMode='clean';card.imageChecked=false;card.speechChecked=false;
+ }else{
+   card.batchSuggestion.imageError='이미지 QA 재검토 필요';
+ }
+ if(!await write({skipRender:true}))throw Error('클라우드 이미지 결과 저장 실패');
+ return review.passed===true;
+}
+
+async function recoverImageOnly(card){
+ const info=card.batchSuggestion||{};
+ if(info.score==null||!String(card.mnemonic||'').trim()||!String(card.scene||'').trim())return false;
+ card.sceneCandidates=Array.isArray(card.sceneCandidates)?card.sceneCandidates:[];
+ card.history=Array.isArray(card.history)?card.history:[];
+ let acceptedPath='',lastReview=null,feedback='';
+ for(let imageAttempt=1;imageAttempt<=2;imageAttempt++){
+  batchMessage(`${card.word} · 기존 연상 유지 · 이미지 ${imageAttempt}/2 재생성 중…`);
+  const imageResult=await batchRequest('/api/image',{...payload(card),imageFeedback:feedback});
+  if(!imageResult.image||typeof imageResult.image!=='string')throw Error('이미지 경로 누락');
+  const path=imageResult.image;
+  batchMessage(`${card.word} · 재생성 이미지 자동 검수 중…`);
+  const review=await batchRequest('/api/image-review',{...payload(card),image:path});lastReview=review;
+  card.sceneCandidates.push({path,mode:'clean',source:`v4.6.1 이미지 재시도 · QA ${review.passed?'통과':'재검토'}`,date:new Date().toISOString(),imageReview:review});
+  card.history.push({kind:'image-recovery-generated',date:new Date().toISOString(),newImage:path,reviewPassed:review.passed===true,reviewScore:review.total});
+  if(review.passed===true){acceptedPath=path;break;}
+  feedback=String(review.retryFeedback||review.issues?.join(' / ')||'말풍선과 장면 가독성을 개선').slice(0,500);
+ }
+ info.imageReview=lastReview;info.imageAttemptCount=(info.imageAttemptCount||0)+(acceptedPath?1:2);
+ if(acceptedPath){delete info.imageError;card.sceneImage=acceptedPath;card.sceneImageMode='clean';card.imageChecked=false;card.speechChecked=false;}
+ else{info.imageError='이미지 자동검수 재시도 2회 미통과';card.sceneImage='';card.sceneImageMode='clean';}
+ card.batchSuggestion=info;
+ if(!await write({skipRender:true}))throw Error('클라우드 이미지 재시도 결과 저장 실패.');
+ return !!acceptedPath;
+}
+async function batchRun(mode){
+ if(batchState.running||cloudSaving)return;
+ const isImage=mode==='image', isAuto=mode==='auto';const max=isImage?3:10;
+ const eligibleMode=(!isImage && $('batchScope').value==='retry')?'retry':'mnemonic';
+ const chosen=isImage?cards.filter(c=>batchEligible(c,'image')).slice(0,3):cards.filter(c=>batchState.selectedIds.has(c.id)&&batchEligible(c,eligibleMode)).slice(0,Number($('batchLimit').value));
+ if(!chosen.length)return alert(isImage?'관리자가 확정한 연상문장과 장면이 없습니다. 먼저 후보를 선택·확정해 주세요.':'제작할 유효한 초안을 선택하세요.');
+ if(chosen.length>max)return alert('한 번에 처리할 수 있는 단어 수를 초과했습니다.');
+ if(!confirm(isImage?`${chosen.length}개 단어의 그림을 각각 제작합니다. 이미지 API 이용료가 발생하며 자동 공개는 하지 않습니다.`:isAuto?`${chosen.length}개 단어 자동 제작: 각 단어 연상 3안 + 연상 후보 3안씩 최대 3차 시도 + 독립 평가·반대검증 + 통과 시 웹툰 1장 생성(유료 API). 기준 미달은 그림 없이 보류하며 자동 공개는 하지 않습니다. 실행할까요?`:`${chosen.length}개 단어 연상 3안을 생성합니다. API 비용이 발생할 수 있습니다.`))return;
+ batchBackup();batchState.stop=false;batchState.results=[];renderBatchResults();batchSetRunning(true);
+ let completed=0,failed=0;
+ try{
+  for(const card of chosen){
+   if(batchState.stop)break;
+   if(!batchEligible(card,isAuto?eligibleMode:mode))continue;
+   const original=JSON.parse(JSON.stringify(card));
+   if(original.status==='published'){batchResult(card.id,card.word,'보호됨: 이미 공개된 단어는 자동 변경 금지');continue;}
+   batchMessage(`${completed+failed+1}/${chosen.length} · ${card.word} ${isImage?'웹툰 제작':isAuto?'자동 제작 (평가 후 이미지)':'연상 후보 생성'} 중…`);
+   batchResult(card.id,card.word,'진행 중');
+   try{
+    if(isAuto && card.excelImport && String(card.mnemonic||'').trim() && String(card.scene||'').trim() && !card.sceneImage){
+      const passed=await generateExcelImageOnly(card);
+      completed++;batchResult(card.id,card.word,passed?'엑셀 확정 문장 유지 · 이미지 생성/QA 통과 · 공개 검수 대기':'엑셀 확정 문장 유지 · 이미지 생성 완료 · QA 재검토 필요');
+      continue;
+    }
+    if(isAuto && eligibleMode==='retry' && card.batchSuggestion?.score!=null && String(card.mnemonic||'').trim() && String(card.scene||'').trim()){
+      const recovered=await recoverImageOnly(card);
+      completed++;batchResult(card.id,card.word,recovered?'기존 연상 유지 · 이미지 재생성 통과 · 공개 검수 대기':'기존 연상 유지 · 이미지 QA 재실패 · 관리자 검토 필요');
+      continue;
+    }
+    if(isImage){
+      const result=await batchRequest('/api/image',payload(card));
+      if(!result.image||typeof result.image!=='string')throw Error('이미지 경로 누락');
+      card.sceneCandidates=Array.isArray(card.sceneCandidates)?card.sceneCandidates:[];
+      if(!card.sceneCandidates.some(v=>v.path===result.image))card.sceneCandidates.push({path:result.image,mode:'clean',source:'v4.3 AI 일괄 생성 (미검수)',date:new Date().toISOString()});
+      card.history=Array.isArray(card.history)?card.history:[];
+      card.history.push({kind:'generated-image',date:new Date().toISOString(),newImage:result.image,source:'batch-v4.3'});
+    }else{
+      // Up to three DISTINCT rounds. Retry only for quality rejection; do not retry
+      // transport/server failures automatically (charged or ambiguous requests).
+      const maxRounds=isAuto?3:1;
+      const priorFailures=(Array.isArray(card.batchSuggestion?.attempts)?card.batchSuggestion.attempts:[]).slice(-2).flatMap(a=>(a.candidates||[]).map(v=>({mnemonic:v.mnemonic||'',reason:a.feedback||'이전 품질 미달'}))).slice(-6);
+      const attemptLog=[];
+      let proposal=null,winner=null,vetoReason='',strictReview=null,evaluations=[];
+      for(let round=1;round<=maxRounds;round++){
+        if(batchState.stop)break;
+        batchMessage(`${card.word} · ${round}/${maxRounds}차 연상 3안 생성 중…`);
+        proposal=await batchRequest('/api/mnemonics',{...payload(card),priorFailures});
+        if(!Array.isArray(proposal.candidates)||proposal.candidates.length!==3)throw Error('후보 3개 미반환');
+        evaluations=[];
+        for(let i=0;i<proposal.candidates.length;i++){
+          if(batchState.stop)break;
+          const candidate=proposal.candidates[i];
+          batchMessage(`${card.word} · ${round}/${maxRounds}차 후보 ${i+1}/3 독립 검수 중…`);
+          try{
+            const evaluation=await batchRequest('/api/evaluate',{...payload(card),mnemonic:candidate.mnemonic,scene:candidate.scene,anchor:candidate.anchor||''});
+            const scores=Array.isArray(evaluation.scores)?evaluation.scores:[];
+            const total=scores.reduce((a,b)=>a+Number(b||0),0);
+            const ok=scores.length===4 && total>=85 && scores[0]>=24 && scores[1]>=19 && scores[2]>=20 && !evaluation.unnatural && !evaluation.soundCheckNeeded && candidate.quality==='good';
+            evaluations.push({index:i,score:total,ok,details:evaluation});
+          }catch(err){
+            // Network/AI evaluation errors must not silently become a paid retry cycle.
+            throw Error(`후보 ${i+1} 평가 요청 실패: ${String(err.message||err)}`);
+          }
+        }
+        if(batchState.stop)break;
+        const approved=evaluations.filter(e=>e.ok).sort((a,b)=>b.score-a.score);
+        vetoReason='독립 평가 기준 미달';strictReview=null;
+        for(const finalistScore of (isAuto?approved:approved.slice(0,1))){
+          batchMessage(`${card.word} · ${round}/${maxRounds}차 후보 ${finalistScore.index+1} 반대 검증 중…`);
+          const finalist=proposal.candidates[finalistScore.index];
+          // A verification service error is not a quality rejection.
+          const review=await batchRequest('/api/verify',{...payload(card),mnemonic:finalist.mnemonic,scene:finalist.scene,anchor:finalist.anchor||''});
+          if(review.passed===true){winner=finalistScore;strictReview=review;vetoReason='';break;}
+          vetoReason=String(review.evidence?.criticalIssue||'추가 검증에서 소리·뜻 연결 부족').slice(0,240);
+          strictReview=review;
+        }
+        attemptLog.push({round,passed:!!winner,
+          bestScore:evaluations.reduce((m,e)=>Math.max(m,e.score??0),0),
+          feedback:winner?'통과':vetoReason,
+          candidates:proposal.candidates.map((c,i)=>({mnemonic:c.mnemonic,score:evaluations[i]?.score??null,passed:!!evaluations[i]?.ok}))});
+        if(winner)break;
+        // Do not feed unbounded or sensitive content into next prompt.
+        for(let i=0;i<proposal.candidates.length;i++){
+          const c=proposal.candidates[i],e=evaluations[i];
+          priorFailures.push({mnemonic:String(c.mnemonic||'').slice(0,180),
+            reason:[...(e?.details?.reasons||[]),vetoReason].filter(Boolean).join(' / ').slice(0,300)});
+        }
+        if(round<maxRounds)batchMessage(`${card.word} · ${round}차 품질 미달, 탈락 사유 반영해 재생성합니다…`);
+      }
+      if(!proposal)throw Error('작업 중지: 후보가 생성되지 않았습니다.');
+      card.rework={kind:'mnemonic',reason:'AI 자동 제작 · 관리자 최종 공개 대기',date:new Date().toISOString(),candidates:proposal.candidates,mnemonicApproved:!!winner};
+      card.batchSuggestion={model:proposal.model||'',candidate:winner?proposal.candidates[winner.index].mnemonic:'',score:winner?.score??null,anchorResearch:proposal.anchorResearch||null,
+         summary:winner?.details.summary||`${attemptLog.length}차 시도에서 검수 기준을 통과한 후보가 없어 그림 생성을 보류했습니다.`,
+         vetoReason,strictReview,attemptCount:attemptLog.length,attempts:attemptLog,
+         reviews:evaluations.map(e=>({candidate:e.index+1,score:e.score,passed:e.ok,error:e.error||''})),date:new Date().toISOString()};
+      if(winner && isAuto){
+        const picked=proposal.candidates[winner.index];
+        card.mnemonic=picked.mnemonic;
+        card.scene=picked.scene;
+        card.sceneSpeech=winner.details.suggestedSpeech||picked.mnemonic;
+        card.speechRequired=winner.details.speechBubbleRequired===true;
+        card.speechChecked=false;card.imageChecked=false;card.sourceChecked=false;
+        card.flags=[];
+        card.scores=[...winner.details.scores];
+        card.evaluation={status:'ai',model:winner.details.model||'',reasons:winner.details.reasons||[],summary:winner.details.summary||''};
+        // Save the selected text FIRST so an image API failure never discards the reviewed draft.
+        if(!await write({skipRender:true}))throw Error('클라우드 저장을 완료하지 못했습니다.');
+        batchMessage(`${card.word} · 통과 후보 선정 완료, 웹툰 생성 중…`);
+        try{
+          card.sceneCandidates=Array.isArray(card.sceneCandidates)?card.sceneCandidates:[];
+          card.history=Array.isArray(card.history)?card.history:[];
+          let acceptedPath='',lastReview=null,feedback='';
+          for(let imageAttempt=1;imageAttempt<=2;imageAttempt++){
+            batchMessage(`${card.word} · 웹툰 ${imageAttempt}/2 생성 중…`);
+            const imagePayload={...payload(card),imageFeedback:feedback};
+            const imageResult=await batchRequest('/api/image',imagePayload);
+            if(!imageResult.image||typeof imageResult.image!=='string')throw Error('이미지 경로 누락');
+            const path=imageResult.image;
+            batchMessage(`${card.word} · 생성 이미지 자동 검수 중…`);
+            const review=await batchRequest('/api/image-review',{...payload(card),image:path});
+            lastReview=review;
+            const candidate={path,mode:'clean',source:`v4.6.1 자동선정 · 이미지 QA ${review.passed?'통과':'재검토'}`,date:new Date().toISOString(),imageReview:review};
+            if(!card.sceneCandidates.some(v=>v.path===path))card.sceneCandidates.push(candidate);
+            card.history.push({kind:'generated-image',date:new Date().toISOString(),newImage:path,source:'v4.6.1-auto',reviewPassed:review.passed===true,reviewScore:review.total});
+            if(review.passed===true){acceptedPath=path;break;}
+            feedback=String(review.retryFeedback||review.issues?.join(' / ')||'말풍선과 장면 가독성을 개선').slice(0,500);
+            if(imageAttempt<2)batchMessage(`${card.word} · 이미지 검수 미달 (${review.total||0}/100), 지적사항 반영해 1회 재생성…`);
+          }
+          card.batchSuggestion.imageReview=lastReview;
+          card.batchSuggestion.imageAttemptCount=acceptedPath?((card.sceneCandidates.slice(-2).findIndex(v=>v.path===acceptedPath))+1):2;
+          if(!acceptedPath){
+            card.batchSuggestion.imageError='이미지 자동검수 2회 미통과';
+            card.sceneImage='';card.sceneImageMode='clean';card.imageChecked=false;card.speechChecked=false;
+            if(!await write({skipRender:true}))throw Error('클라우드 이미지 검수 결과 저장 실패.');
+            batchResult(card.id,card.word,`연상 통과 · 이미지 QA 미통과 (${lastReview?.total||0}/100) · 관리자 검토 필요`);
+            completed++;continue;
+          }
+          // QA-passed image is selected only as a PREVIEW; never automatically published.
+          card.sceneImage=acceptedPath;card.sceneImageMode='clean';card.imageChecked=false;card.speechChecked=false;
+          if(!await write({skipRender:true}))throw Error('클라우드 이미지 경로 저장 실패. 새로고침해 상태를 확인하세요.');
+        }catch(imageErr){
+          card.batchSuggestion.imageError=String(imageErr.message||imageErr).slice(0,220);
+          // Preserve the selected draft; only report image failure.
+          if(!await write({skipRender:true}))throw Error('클라우드 저장을 완료하지 못했습니다.');
+          batchResult(card.id,card.word,'연상 자동선정 완료 · 이미지 실패: '+card.batchSuggestion.imageError);
+          completed++;continue;
+        }
+      }
+      if(!winner && isAuto){
+        card.history=Array.isArray(card.history)?card.history:[];
+        card.history.push({kind:'auto-quality-hold',date:new Date().toISOString(),reason:vetoReason||'독립 평가 기준 미달; 이미지 생성 생략'});
+      }
+      card.history.push({kind:'batch-mnemonics-created',date:new Date().toISOString(),reason:'3 candidates, unapproved'});
+    }
+    if(!await write({skipRender:true}))throw Error('클라우드 저장을 완료하지 못했습니다.');
+    completed++;batchResult(card.id,card.word,isImage?'이미지 후보 저장 · 관리자 검수 필요':isAuto?(card.batchSuggestion?.score!=null?'자동선정·웹툰 후보 저장 · 공개 검수 대기':`품질 미달 · ${card.batchSuggestion?.attemptCount||1}차 시도 · 이미지 생략 · 재검토 필요`):'연상 3안 저장 · 관리자 선택 필요');
+   }catch(err){
+    // Preserve reviewed draft when partial cloud progress has already been saved.
+    if(!(isAuto && card.batchSuggestion?.score!=null)){for(const key of Object.keys(card))delete card[key];Object.assign(card,original);}
+    failed++;batchResult(card.id,card.word,'실패: '+String(err.message||err).slice(0,140));
+    // An ambiguous cloud write failure may have committed; stop to avoid duplicates/conflicts.
+    if(/클라우드 저장/.test(String(err.message||''))){batchState.stop=true;batchMessage('저장 결과가 불확실합니다. 중단 후 클라우드 새로고침으로 확인하세요.');break;}
+   }
+  }
+ }finally{
+  batchSetRunning(false);
+  batchMessage(`처리 완료 ${completed}개 · 실패 ${failed}개 · 남은 ${Math.max(0,chosen.length-completed-failed)}개. 자동 공개는 하지 않았습니다.`);
+  render();renderBatchSelection();
+ }
+}
+async function runQuickBatch(count){
+ if(batchState.running)return;
+ $('batchScope').value='ready';$('batchLimit').value=String(count);batchState.selectedIds.clear();renderBatchSelection();
+ const list=batchCandidates().slice(0,count);
+ if(!list.length)return alert('자동 제작할 신규 초안이 없습니다.');
+ batchState.selectedIds=new Set(list.map(c=>c.id));
+ await batchRun('auto');
+ const review=$('quickReviewPanel');if(review&&!review.hidden)review.scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('quickBatch5').addEventListener('click',()=>runQuickBatch(5));
+$('quickBatch10').addEventListener('click',()=>runQuickBatch(10));
+$('quickRetry').addEventListener('click',()=>chooseQuickMode('retry'));
+$('quickNew').addEventListener('click',()=>chooseQuickMode('ready'));
+$('quickStart').addEventListener('click',()=>{
+ if(batchState.running)return;
+ $('batchLimit').value='1';
+ const list=batchCandidates();const target=list.find(c=>batchState.selectedIds.has(c.id))||list[0];
+ if(!target){updateQuickTarget();return;}
+ batchState.selectedIds=new Set([target.id]);
+ batchRun('auto');
+});
+$('batchSelection').addEventListener('click',e=>{if(!e.target.closest('#batchOpenCsv'))return; const panel=$('bulkImportPanel');panel.open=true; panel.scrollIntoView({behavior:'smooth',block:'center'});});
+$('batchSelection').addEventListener('change',e=>{
+ const inp=e.target.closest('[data-batch-card]');if(!inp)return;
+ if(inp.checked){if(batchState.selectedIds.size>=Number($('batchLimit').value)){inp.checked=false;return alert('선택 가능한 단어 수를 초과했습니다.');}batchState.selectedIds.add(inp.dataset.batchCard);}else batchState.selectedIds.delete(inp.dataset.batchCard);
+});
+$('batchScope').addEventListener('change',()=>{batchState.selectedIds.clear();renderBatchSelection()});
+$('batchLimit').addEventListener('change',()=>{batchState.selectedIds.clear();renderBatchSelection()});
+$('batchMnemonicStart').addEventListener('click',()=>batchRun('auto'));
+$('batchImageStart').addEventListener('click',()=>batchRun('image'));
+$('batchStop').addEventListener('click',()=>{batchState.stop=true;batchMessage('현재 요청 완료 후 중단합니다.');});
+$('quickReviewPanel').addEventListener('click',async e=>{
+ const publish=e.target.closest('[data-quick-publish]');
+ if(publish){const c=cards.find(x=>x.id===publish.dataset.quickPublish);await quickPublishCard(c);return;}
+ const open=e.target.closest('[data-quick-open]');
+ if(open){selected=open.dataset.quickOpen;$('q').value='';$('cardStatusFilter').value='all';render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});return;}
+ const retry=e.target.closest('[data-quick-retry]');
+ if(retry){const c=cards.find(x=>x.id===retry.dataset.quickRetry);if(!c)return;await recordResearchFeedback(c,'failure','관리자가 최종 검수에서 재생성을 선택');chooseQuickMode('retry');batchState.selectedIds=new Set([c.id]);$('batchLimit').value='1';await batchRun('auto');return;}
+ const reject=e.target.closest('[data-quick-reject]');
+ if(reject){const c=cards.find(x=>x.id===reject.dataset.quickReject);if(!c)return;if(!confirm(`‘${c.word}’ 자동 제작 결과를 반려할까요?`))return;const before=JSON.parse(JSON.stringify(c));c.status='rejected';c.rework={kind:'both',reason:'관리자 최종 검수 반려',date:new Date().toISOString()};c.history=Array.isArray(c.history)?c.history:[];c.history.push({kind:'quick-review-rejected',date:new Date().toISOString()});const ok=await write({skipRender:true});if(!ok){Object.keys(c).forEach(k=>delete c[k]);Object.assign(c,before);alert('반려 저장에 실패했습니다. 기존 상태를 유지합니다.');return;}await recordResearchFeedback(c,'failure','관리자가 최종 검수에서 반려');render();return;}
+});
+$('savedBatchResults').addEventListener('click',e=>{const b=e.target.closest('[data-batch-open]');if(!b)return;selected=b.dataset.batchOpen;$('q').value='';$('cardStatusFilter').value='all';render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});});
+$('batchResults').addEventListener('click',e=>{const b=e.target.closest('[data-batch-open]');if(!b)return;selected=b.dataset.batchOpen;$('q').value='';$('cardStatusFilter').value='all';render();$('editor').scrollIntoView({behavior:'smooth',block:'start'});});
+$('batchReport').addEventListener('click',()=>{
+ const csv=(s)=>'"'+String(s||'').replace(/"/g,'""')+'"';const lines=[['단어','상태'],...batchState.results.map(x=>[x.word,x.status])];const blob=new Blob(['\uFEFF'+lines.map(r=>r.map(csv).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='onecut_batch_v4_6_0.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+});
+renderBatchSelection();
+
+async function initializeCloud(){
+ try{
+  const status=await OneCutCloud.status();
+  if(!status.configured){render();return}
+  $('adminMain').hidden=true;$('cloudToolbar').hidden=false;
+  async function enter(){
+    cards=await OneCutCloud.loadAdmin();selected=cards[0]?.id;$('migrateLocal').hidden=cards.length>0;
+    $('cloudLogin').hidden=true;$('adminMain').hidden=false;
+    showCloudState('Supabase 연결 · '+(OneCutCloud.user?.email||'관리자'));
+    render();
+  }
+  try{await OneCutCloud.me();await enter();}catch{OneCutCloud.logout();$('cloudLogin').hidden=false;showCloudState('로그인 필요');}
+  $('cloudLoginForm').onsubmit=async e=>{e.preventDefault();$('cloudLoginMessage').textContent='로그인 중…';try{
+     await OneCutCloud.login($('cloudEmail').value,$('cloudPassword').value);
+     $('cloudPassword').value='';await enter();
+   }catch(err){$('cloudLoginMessage').textContent='로그인 실패: '+err.message}}
+  $('cloudLogout').onclick=()=>{OneCutCloud.logout();cards=[];$('adminMain').hidden=true;$('cloudLogin').hidden=false;showCloudState('로그아웃됨')};
+  $('cloudSync').onclick=async()=>{if(cloudSaving)return alert('저장이 진행 중입니다. 완료 후 새로고침하세요.');try{cards=await OneCutCloud.loadAdmin();selected=cards[0]?.id;render();showCloudState('클라우드 데이터 최신 상태')}catch(err){alert(err.message)}};
+ }catch(e){$('adminMain').hidden=true;$('cloudLogin').hidden=false;$('cloudLoginMessage').textContent='설정 확인 오류: '+e.message}
+}
+(function organizeAdvancedAdmin(){
+ const mount=$('advancedAdminMount');
+ if(!mount)return;
+ ['batchStudio','catalogPanel','releasePanel'].forEach(id=>{const el=$(id);if(el)mount.appendChild(el)});
+})();
+$('serverCheck').hidden=true;$('serverCheck').style.margin='12px 0';$('imageAuditAll').parentElement.insertAdjacentElement('afterend',$('serverCheck'));checkRunningServer();initializeCloud();
+</script><dialog id="sceneLightbox" class="scene-lightbox" aria-label="장면 이미지 확대 보기"><div class="scene-lightbox-head"><strong id="sceneLightboxLabel">원본 확대</strong><button type="button" class="btn" data-close-preview>닫기 ×</button></div><div class="scene-lightbox-body"><img id="sceneLightboxImage" alt="확대 이미지"></div><p class="small">이미지 전체를 잘림 없이 표시합니다. 창을 닫으려면 Esc 또는 닫기 버튼을 누르세요.</p></dialog><script>
+// User-selectable, device-local text size. No effect on account data or Supabase.
+(function(){
+  const key='onecut_font_size';
+  const saved=(()=>{try{return localStorage.getItem(key)==='large'?'large':'normal'}catch(e){return 'normal'}})();
+  const apply=size=>{
+    document.body.classList.toggle('readable-large',size==='large');
+    document.querySelectorAll('[data-font-size]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fontSize===size)));
+  };
+  apply(saved);
+  document.querySelectorAll('[data-font-size]').forEach(b=>b.addEventListener('click',()=>{
+    const size=b.dataset.fontSize;apply(size);try{localStorage.setItem(key,size)}catch(e){}
+  }));
+  document.documentElement.classList.remove('font-large-preload');
+})();
+
+
+// v5.0 platform: catalog, curriculum, report, backup
+let catalogState={cards:[]}, curriculumPreviewState=null, reportState=null;
+function v5fillTargets(){
+ const g=$('curriculumGroup'); if(g)g.innerHTML=(groupState.groups||[]).map(x=>`<option value="${api.escape(x.id)}">${api.escape(x.name)}</option>`).join('')||'<option value="">그룹 없음</option>';
+ const type=$('reportType')?.value||'student', target=$('reportTarget'); if(!target)return;
+ const rows=type==='group'?(groupState.groups||[]):studentOverview;
+ target.innerHTML=rows.map(x=>`<option value="${api.escape(x.id||x.user_id)}">${api.escape(x.name||x.email||x.label||String(x.user_id||'학생').slice(0,12))}</option>`).join('')||'<option value="">대상 없음</option>';
+}
+function currentMetaCard(){return catalogState.cards.find(c=>c.id===$('metaCard').value)}
+function renderMetaForm(){const c=currentMetaCard();if(!c)return;const m=c.meta||{};$('metaDifficulty').value=m.difficulty||'미분류';$('metaSchool').value=m.school_level||'미분류';$('metaExam').value=m.exam_scope||'';$('metaTopic').value=m.topic||'';$('metaTags').value=(m.tags||[]).join(', ')}
+async function loadCatalog(){try{const d=await OneCutCloud.request('/api/admin/catalog');catalogState={cards:Array.isArray(d.cards)?d.cards:[]};$('catalogSummary').innerHTML=`<div><b>${d.counts?.published||0}</b><span>공개 단어</span></div><div><b>${d.counts?.classified||0}</b><span>난이도 분류 완료</span></div>`;$('metaCard').innerHTML=catalogState.cards.map(c=>`<option value="${api.escape(c.id)}">${api.escape(c.word)} · ${api.escape(c.meaning||'')}</option>`).join('');renderMetaForm();$('catalogNote').textContent='분류정보를 불러왔습니다.'}catch(err){$('catalogNote').textContent='분류정보 준비 필요: '+err.message+' · database/08_v5_platform.sql을 Supabase에서 1회 실행하세요.'}}
+$('loadCatalog').onclick=loadCatalog;$('metaCard').onchange=renderMetaForm;
+$('saveMeta').onclick=async()=>{const c=currentMetaCard();if(!c)return;const body={action:'save_meta',card_id:c.id,difficulty:$('metaDifficulty').value,school_level:$('metaSchool').value,exam_scope:$('metaExam').value.trim(),topic:$('metaTopic').value.trim(),tags:$('metaTags').value.split(',').map(x=>x.trim()).filter(Boolean)};try{await OneCutCloud.request('/api/admin/catalog/action',{method:'POST',body:JSON.stringify(body)});$('catalogNote').textContent=`${c.word} 분류를 저장했습니다.`;await loadCatalog()}catch(err){$('catalogNote').textContent='분류 저장 실패: '+err.message}};
+function curriculumBody(){return {group_id:$('curriculumGroup').value,count:Number($('curriculumCount').value)||10,sessions:Number($('curriculumSessions').value)||1,difficulty:$('curriculumDifficulty').value,school_level:$('curriculumSchool').value,exam_scope:$('curriculumExam').value.trim(),topic:$('curriculumTopic').value.trim(),due_days:Number($('curriculumDue').value)||7,title:$('curriculumTitle').value.trim()||'맞춤 자동 커리큘럼'}}
+function renderCurriculumPreview(d){curriculumPreviewState=d;const students=d.students||[];$('curriculumPreview').innerHTML=students.length?`<div class="curriculum-summary"><b>${students.length}명 · ${d.session_count}회차</b><span>학생별 취약 + 신규 단어 자동 혼합</span></div>${students.map(st=>`<details><summary>${api.escape(st.email||String(st.user_id).slice(0,12))}</summary>${(st.sessions||[]).map(ss=>`<div class="curriculum-session"><b>${ss.session}회차 · ${ss.card_ids.length}단어</b><p>${ss.items.map(x=>`${api.escape(x.word)} <small>${api.escape(x.kind)}</small>`).join(' · ')||'선택 가능한 단어 없음'}</p></div>`).join('')}</details>`).join('')}`:'<p class="small">해당 그룹에 학생이 없거나 조건에 맞는 단어가 없습니다.</p>';$('applyCurriculum').disabled=!students.some(st=>(st.sessions||[]).some(ss=>ss.card_ids?.length))}
+$('previewCurriculum').onclick=async()=>{if(!groupState.groups.length)await loadGroups();try{const d=await OneCutCloud.request('/api/admin/curriculum/preview',{method:'POST',body:JSON.stringify(curriculumBody())});renderCurriculumPreview(d);$('catalogNote').textContent='자동 커리큘럼 미리보기를 만들었습니다.'}catch(err){$('catalogNote').textContent='커리큘럼 미리보기 실패: '+err.message}};
+$('applyCurriculum').onclick=async()=>{if(!curriculumPreviewState||!confirm('미리보기 기준으로 학생별 학습세트를 실제 배정할까요?'))return;try{const d=await OneCutCloud.request('/api/admin/curriculum/apply',{method:'POST',body:JSON.stringify(curriculumBody())});$('catalogNote').textContent=`${d.students}명에게 ${d.created_assignments}개 학습세트를 배정했습니다.`;$('applyCurriculum').disabled=true;await loadGroups()}catch(err){$('catalogNote').textContent='자동 배정 실패: '+err.message}};
+$('reportType').onchange=v5fillTargets;
+$('loadReport').onclick=async()=>{const type=$('reportType').value,id=$('reportTarget').value,days=$('reportDays').value;if(!id)return;try{const d=await OneCutCloud.request(`/api/admin/report?target_type=${encodeURIComponent(type)}&target_id=${encodeURIComponent(id)}&days=${encodeURIComponent(days)}`);reportState=d;const a=d.aggregate||{};$('reportOutput').innerHTML=`<div class="report-head"><h3>${api.escape(d.label||'학습')} · 최근 ${d.days}일</h3><small>${new Date(d.generated_at).toLocaleString('ko-KR')}</small></div><div class="queue-summary"><div><b>${a.students||0}</b><span>학생</span></div><div><b>${a.learned||0}</b><span>누적 학습</span></div><div><b>${a.mastered||0}</b><span>완전 암기</span></div><div><b>${a.weak||0}</b><span>취약</span></div><div><b>${a.accuracy==null?'-':a.accuracy+'%'}</b><span>학습 정답률</span></div><div><b>${a.exam_avg==null?'-':a.exam_avg+'점'}</b><span>실전 테스트</span></div></div><div class="report-students">${(d.students||[]).map(st=>`<article><b>${api.escape(st.email||String(st.user_id).slice(0,12))}</b><span>학습 ${st.summary?.learned||0} · 완전암기 ${st.summary?.mastered||0} · 취약 ${st.summary?.weak||0} · 복습대기 ${st.summary?.due||0}</span><span>정답률 ${st.summary?.accuracy==null?'-':st.summary.accuracy+'%'} · 실전 ${st.exam_avg==null?'-':st.exam_avg+'점'} (${st.exam_count||0}회)</span><small>취약: ${(st.weak_top||[]).map(x=>api.escape(x.word)).join(', ')||'없음'}</small></article>`).join('')}</div>`}catch(err){$('reportOutput').innerHTML='<p class="small">리포트 생성 실패: '+api.escape(err.message)+'</p>'}};
+$('printReport').onclick=()=>window.print();
+$('serverBackup').onclick=async()=>{try{const d=await OneCutCloud.request('/api/admin/backup');const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`onecut_v5_backup_${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(err){alert('운영 백업 실패: '+err.message)}};
+const _v5LoadGroups=loadGroups;loadGroups=async function(){await _v5LoadGroups();v5fillTargets()};
+const _v5LoadStudents=loadStudentOverview;loadStudentOverview=async function(){await _v5LoadStudents();v5fillTargets()};
+setTimeout(v5fillTargets,0);
+</script></body></html>

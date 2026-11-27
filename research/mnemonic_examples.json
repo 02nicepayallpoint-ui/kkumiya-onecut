@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "purpose": "한컷영단어 발음연상 생성 시 참고하는 승인/실패 사례. 문구 복제보다 원리 학습용.",
+  "examples": [
+    {
+      "verdict": "success",
+      "word": "conceal",
+      "ipa": "/kənˈsiːl/",
+      "meaning": "숨기다, 감추다",
+      "anchor": "컨실러",
+      "mnemonic": "컨실러로 잡티 완벽히 숨겼어!",
+      "principle": "실제 쓰이는 외래어의 발음과 실제 기능이 영어 뜻에 직접 연결됨",
+      "tags": [
+        "loanword",
+        "function-bridge",
+        "direct-meaning"
+      ]
+    },
+    {
+      "verdict": "success",
+      "word": "immense",
+      "ipa": "/ɪˈmens/",
+      "meaning": "엄청난, 거대한",
+      "anchor": "맨션",
+      "mnemonic": "이 맨션, 엄청 크네!",
+      "principle": "핵심 강세부와 익숙한 명사를 연결하고 장면 자체가 거대함을 보여줌",
+      "tags": [
+        "familiar-noun",
+        "visual-scale",
+        "direct-meaning"
+      ]
+    },
+    {
+      "verdict": "failure",
+      "word": "conceal",
+      "ipa": "/kənˈsiːl/",
+      "meaning": "숨기다, 감추다",
+      "anchor": "",
+      "mnemonic": "가방 안에 몰래 숨겼어",
+      "principle": "뜻은 맞지만 영어 소리와 연결되는 발음 고리가 없음",
+      "tags": [
+        "meaning-only",
+        "no-sound-anchor"
+      ]
+    },
+    {
+      "verdict": "failure",
+      "word": "conceal",
+      "ipa": "/kənˈsiːl/",
+      "meaning": "숨기다, 감추다",
+      "anchor": "",
+      "mnemonic": "책 뒤에 숨겼어",
+      "principle": "상황 묘사일 뿐 발음연상이 아님",
+      "tags": [
+        "meaning-only",
+        "no-sound-anchor"
+      ]
+    },
+    {
+      "verdict": "failure",
+      "word": "abandon",
+      "ipa": "/əˈbæn.dən/",
+      "meaning": "버리다, 포기하다",
+      "anchor": "밴 돈",
+      "mnemonic": "네가 밴 돈이잖아! 돌려줘!",
+      "principle": "일부 소리만 비슷하고 버리다/포기하다 뜻으로 이어지지 않음",
+      "tags": [
+        "partial-sound",
+        "meaning-disconnect"
+      ]
+    },
+    {
+      "verdict": "failure",
+      "word": "allow",
+      "ipa": "/əˈlaʊ/",
+      "meaning": "허락하다",
+      "anchor": "얼라 와",
+      "mnemonic": "얼라 와",
+      "principle": "실제 자연스러운 한국어 표현이 아니며 의미 연결도 약함",
+      "tags": [
+        "unnatural-korean",
+        "forced-sound"
+      ]
+    },
+    {
+      "verdict": "failure",
+      "word": "belong",
+      "ipa": "/bɪˈlɔːŋ/",
+      "meaning": "속하다",
+      "anchor": "비닐 봉",
+      "mnemonic": "비닐 봉",
+      "principle": "소리 끼워맞추기만 있고 뜻과 상황 연결이 없음",
+      "tags": [
+        "forced-sound",
+        "meaning-disconnect"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: kkumiya
+    runtime: python
+    plan: free
+    buildCommand: pip install --no-cache-dir openpyxl pillow
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: ONECUT_PORT
+        value: 10000
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: ONECUT_TEXT_MODEL
+        value: gpt-4.1-mini
+      - key: ONECUT_IMAGE_MODEL
+        value: gpt-image-2.5-flare

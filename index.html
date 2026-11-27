@@ -1,0 +1,484 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>한컷영단어 · 학생용 v5.1.3</title><link rel="stylesheet" href="style.css?v=5.2.0"><script>try{if(localStorage.getItem('onecut_font_size')==='large')document.documentElement.classList.add('font-large-preload')}catch(e){}</script></head><body class="student-view"><header><div class="top"><div class="logo">한<em>컷</em>영단어</div><div class="readability-controls" aria-label="글자 크기 설정"><span class="readability-label">글자 크기</span><button class="btn" data-font-size="normal" type="button" aria-pressed="true">기본</button><button class="btn" data-font-size="large" type="button" aria-pressed="false">크게</button></div><nav><a href="admin.html">관리자</a></nav></div></header><main><h1>한 컷 보면, 단어가 기억난다.</h1><p class="sub">AI 맞춤 5단어 · 발음 듣기 · 한컷 연상 · 퀴즈 · 취약단어 · 장기복습을 혼자 진행합니다.</p><section class="panel" id="studentAuthPanel" style="margin:0 0 14px;padding:15px">
+ <div class="row" style="flex-wrap:wrap;gap:8px;align-items:center">
+ <strong>내 학습기록</strong><span class="small" id="studentAuthState">게스트 모드 · 이 브라우저에만 저장</span>
+ <button class="btn" id="studentLoginToggle" type="button">학생 로그인 / 회원가입</button>
+ <button class="btn" id="studentLogout" type="button" hidden>로그아웃</button>
+ </div>
+ <form id="studentAuthForm" style="display:none;margin-top:12px" autocomplete="on">
+ <div class="row" style="gap:8px;flex-wrap:wrap">
+ <input id="studentEmail" type="email" placeholder="이메일" aria-label="학생 이메일" autocomplete="email" required style="min-width:180px;flex:1">
+ <input id="studentPassword" type="password" placeholder="비밀번호" aria-label="학생 비밀번호" autocomplete="current-password" required style="min-width:180px;flex:1">
+ <button class="btn primary" type="submit">로그인</button>
+ <button class="btn" type="button" id="studentSignup">회원가입</button><button class="btn ghost" type="button" id="studentResetPassword">비밀번호 재설정</button>
+ </div></form>
+ <p class="small" id="studentAuthMessage" aria-live="polite" style="margin:5px 0 0"></p>
+ <div id="passwordRecoveryPanel" class="notice" hidden style="margin-top:12px"><b>새 비밀번호 설정</b><div class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"><input id="recoveryPassword" type="password" minlength="8" placeholder="새 비밀번호 (8자 이상)" autocomplete="new-password"><input id="recoveryPassword2" type="password" minlength="8" placeholder="새 비밀번호 확인" autocomplete="new-password"><button class="btn primary" type="button" id="completePasswordReset">비밀번호 변경</button></div><p class="small" id="recoveryMessage"></p></div>
+ </section><section class="daily-summary" aria-label="오늘의 학습 현황">
+ <div class="daily-summary-heading"><strong>오늘의 학습</strong><span id="dailyDate" class="small"></span></div>
+ <div class="daily-stats achievement-stats">
+ <div class="daily-stat"><span>오늘 학습</span><b id="statToday">0</b><small>개 단어</small></div>
+ <div class="daily-stat"><span>오늘 정답률</span><b id="statAccuracy">-</b><small id="statAccuracyUnit">퀴즈 전</small></div>
+ <div class="daily-stat"><span>복습할 단어</span><b id="statDue">0</b><small>개 대기</small></div>
+ <div class="daily-stat"><span>다시 외울 단어</span><b id="statWeak">0</b><small>개</small></div>
+ <div class="daily-stat"><span>완전 암기</span><b id="statMastered">0</b><small>개</small></div>
+ <div class="daily-stat"><span>학습한 단어</span><b id="statLearned">0</b><small>개 누적</small></div>
+ <div class="daily-stat"><span>연속 학습</span><b id="statStreak">0</b><small>일</small></div>
+ </div>
+ <div class="achievement-callout" id="achievementCallout"><div><strong id="achievementTitle">오늘의 학습을 시작해 보세요</strong><p id="achievementText">5단어 학습 후 바로 퀴즈로 기억을 확인합니다.</p></div><button class="btn" type="button" id="achievementAction">추천 학습 시작</button></div>
+ <div class="daily-goal-track" role="progressbar" aria-label="오늘 단어 5개 학습 목표" aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="dailyGoalTrack"><div id="dailyGoalFill"></div></div><div class="daily-summary-actions"><span id="dailyGoalText" class="small" role="status" aria-live="polite"></span><span id="dailyNextReview" class="small" aria-live="polite"></span><button class="btn primary" type="button" id="startDailySession">오늘의 5단어 학습</button><button class="btn" type="button" id="startTodayReview">오늘 복습 시작</button></div>
+ </section><section id="personalPlan" class="assigned-learning"><div><span class="tag">AI 개인 맞춤</span><h2 id="personalPlanTitle">오늘의 맞춤 5단어</h2><p id="personalPlanMeta" class="small">취약·복습·신규 단어를 현재 학습상태에 맞게 자동 조합합니다.</p></div><button class="btn primary" type="button" id="startPersonalPlan">맞춤 학습 시작</button></section><section id="assignedLearning" class="assigned-learning" hidden aria-hidden="true"><div><h2 id="assignedTitle"></h2><p id="assignedMeta"></p></div><button id="startAssigned" type="button"></button></section><div class="grid"><aside class="panel side"><div class="controls" style="margin-bottom:12px"><button class="btn primary" data-tab="search">검색</button><button class="btn" data-tab="daily">오늘의 학습</button><button class="btn" data-tab="course">순서 학습</button><button class="btn" data-tab="unlearned">미학습</button><button class="btn" data-tab="review">내 복습</button><button class="btn" data-tab="favorites">즐겨찾기</button><button class="btn" data-tab="weak">다시 외울 단어</button><button class="btn" data-tab="mastered">완전 암기</button><button class="btn" data-tab="stats">학습 분석</button><button class="btn" data-tab="meaning-quiz">뜻 퀴즈</button><button class="btn" data-tab="spelling-quiz">철자 퀴즈</button><button class="btn" data-tab="exam">실전 테스트</button></div><div id="searchArea"><input type="search" id="q" placeholder="영어 또는 뜻 검색" aria-label="영어 단어 또는 뜻 검색"><p class="small" id="count"></p><div class="list" id="list"></div><div class="row student-tools"><button class="btn" id="exportProgress">학습기록 백업</button><label class="btn" for="importProgress">기록 복원</label><input type="file" id="importProgress" accept=".json,application/json" hidden></div><p class="small" id="progressMsg" aria-live="polite"></p></div></aside><section class="panel" id="content"></section></div></main><div class="footer">클라우드 연동 시 승인된 카드만 공개 · 로그인 시 학습기록 클라우드 동기화 · 발음은 브라우저 음성 합성</div><script src="shared.js?v=5.2.0"></script><script src="cloud.js?v=5.2.0"></script><script src="student-cloud.js?v=5.2.0"></script><script>
+'use strict';const api=OneCut,$=id=>document.getElementById(id),PROGRESS='onecut_integrated_v2_progress';let cards=[],idx=0,tab='search',reveal=false,progress={},reviewId=null,studyOrder=[],quiz=null,dailySession=null,examState=null;try{progress=JSON.parse(localStorage.getItem(PROGRESS))||{}}catch{}const e=api.escape;
+async function sync(){stopSpeech();const prev=cards[idx]?.id;
+ try{let st=await OneCutCloud.status();cards=st.configured?await OneCutCloud.published():api.published();}
+ catch(err){cards=[];window.onecutSyncError=err.message;console.warn('공개 카드 조회 실패:',err.message);}
+ idx=Math.max(0,cards.findIndex(c=>c.id===prev));studyOrder=cards.map((_,i)=>i);if(quiz&&!quiz.questionIds.every(id=>cards.some(c=>c.id===id)))quiz=null;if(dailySession&&!dailySession.ids.every(id=>cards.some(c=>c.id===id)))dailySession=null;render()}
+let studentEmail='',studentUserId='',saving=false,pendingSave=false,assignments=[],activeAssignment=null;
+// Keep guest and signed-in students' local progress completely separate.
+// Never silently merge a guest's or a different student's history into the current account.
+const accountProgressKey=id=>PROGRESS+'_student_'+id;
+const readProgress=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{}}catch{return {}}};
+function useStudentAccount(user){
+ if(!user?.id)throw Error('계정 식별자를 확인할 수 없습니다.');
+ studentUserId=user.id;studentEmail=user.email||'';
+ progress=readProgress(accountProgressKey(studentUserId));
+ updateStudentUI();refreshPersonalPlan();render();
+}
+
+function studentStatus(message){$('studentAuthMessage').textContent=message;}
+function updateStudentUI(){
+ $('studentAuthState').textContent=studentEmail?'클라우드 동기화 · '+studentEmail:'게스트 모드 · 이 브라우저에만 저장';
+ $('studentLogout').hidden=!studentEmail;
+ $('studentLoginToggle').hidden=!!studentEmail;
+ if(studentEmail)$('studentAuthForm').style.display='none';
+}
+function assignmentLocalState(a){const ids=(Array.isArray(a?.card_ids)?a.card_ids:[]).filter(id=>cards.some(c=>c.id===id)),total=ids.length;let learned=0,weak=0,mastered=0;for(const id of ids){const p=progress[id];if(!p||!p.attempts)continue;learned++;if(['again','hard'].includes(p.value))weak++;if(isMasteredEntry(p))mastered++;}const completion=total?Math.round(learned/total*100):0;return {ids,total,learned,weak,mastered,completion,complete:total>0&&learned===total&&weak===0}}
+function refreshAssignedLearning(){if(!activeAssignment){$('assignedLearning').hidden=true;return}const x=assignmentLocalState(activeAssignment);if(!x.total){$('assignedLearning').hidden=true;return}$('assignedLearning').hidden=false;$('assignedTitle').textContent=activeAssignment.title||'배정 학습';const status=x.complete?'완료':x.weak?'취약단어 '+x.weak+'개 재학습 필요':x.learned?'학습 중':'아직 시작 전';$('assignedMeta').textContent=`${x.learned}/${x.total}단어 · 진행률 ${x.completion}% · 완전암기 ${x.mastered}개 · ${status}${activeAssignment.due_at?' · 마감 '+new Date(activeAssignment.due_at).toLocaleDateString('ko-KR'):''}`;$('startAssigned').textContent=x.complete?'배정 학습 다시 보기':x.learned?'이어서 학습':'배정 학습 시작'}
+async function loadAssignments(){assignments=[];activeAssignment=null;$('assignedLearning').hidden=true;return []}
+function startAssignedSession(){if(!activeAssignment)return;const ids=activeAssignment.card_ids.filter(id=>cards.some(c=>c.id===id));if(!ids.length)return;dailySession={ids,cursor:0,results:[],revealed:false,kind:'assigned',title:activeAssignment.title||'배정 학습'};tab='daily';render()}
+async function syncStudentProgress(){
+ if(!studentUserId)return;
+ const owner=studentUserId;
+ try{
+   const remote=await OneCutStudent.load();
+   if(owner!==studentUserId)return;
+   // Keep the more recently studied entry per word; favorites from the newest copy.
+   const merged={...remote};
+   for(const [key,local] of Object.entries(progress)){
+     const cloud=merged[key];if(!cloud || String(local.updated||'')>String(cloud.updated||''))merged[key]=local;
+   }
+   progress=merged;localStorage.setItem(accountProgressKey(studentUserId),JSON.stringify(progress));render();
+   await OneCutStudent.save(JSON.parse(JSON.stringify(progress)));
+   if(owner===studentUserId)studentStatus('학습기록을 클라우드와 동기화했습니다.');
+ }catch(err){if(owner===studentUserId)studentStatus('동기화 실패 · 브라우저 기록은 유지됩니다: '+err.message)}
+}
+async function flushProgress(){
+ if(!studentUserId)return;
+ if(saving){pendingSave=true;return;}
+ const owner=studentUserId;
+ saving=true;
+ try{
+   do{
+     pendingSave=false;
+     if(owner!==studentUserId)break;
+     // Save an immutable snapshot, not a mutable reference that another login can replace.
+     const snapshot=JSON.parse(JSON.stringify(progress));
+     await OneCutStudent.save(snapshot);
+   }while(pendingSave&&owner===studentUserId);
+   if(owner===studentUserId)studentStatus('클라우드 저장 완료');
+ }catch(err){if(owner===studentUserId)studentStatus('클라우드 저장 실패 · 이 기기의 계정별 기록은 유지됩니다: '+err.message)}
+ finally{saving=false;if(pendingSave&&studentUserId&&owner!==studentUserId){pendingSave=false;void flushProgress()}}
+}
+function saveProgress(){
+ const key=studentUserId?accountProgressKey(studentUserId):PROGRESS;
+ localStorage.setItem(key,JSON.stringify(progress));
+ refreshAssignedLearning();
+ void flushProgress();
+}
+$('studentLoginToggle').onclick=()=>{$('studentAuthForm').style.display=$('studentAuthForm').style.display==='none'?'block':'none'};
+$('studentLogout').onclick=()=>{OneCutStudent.logout();studentEmail='';studentUserId='';assignments=[];activeAssignment=null;$('assignedLearning').hidden=true;progress=readProgress(PROGRESS);updateStudentUI();studentStatus('로그아웃했습니다. 게스트 기록으로 전환합니다. 계정 기록은 별도 보관됩니다.');render()};
+$('studentAuthForm').onsubmit=async event=>{event.preventDefault();try{
+ const r=await OneCutStudent.login($('studentEmail').value.trim(),$('studentPassword').value);
+ useStudentAccount(r.user);await syncStudentProgress();
+ }catch(err){studentStatus('로그인 실패: '+err.message)}};
+$('studentResetPassword').onclick=async()=>{const email=$('studentEmail').value.trim();if(!email)return studentStatus('비밀번호를 재설정할 이메일을 입력해 주세요.');try{await OneCutStudent.passwordReset(email);studentStatus('비밀번호 재설정 메일을 요청했습니다. 받은편지함을 확인해 주세요.')}catch(err){studentStatus('재설정 요청 실패: '+err.message)}};
+let recoveryAccessToken='';
+function initPasswordRecovery(){const hash=new URLSearchParams(location.hash.replace(/^#/,''));if(hash.get('type')==='recovery'&&hash.get('access_token')){recoveryAccessToken=hash.get('access_token');$('passwordRecoveryPanel').hidden=false;$('studentAuthForm').style.display='none';studentStatus('비밀번호 재설정 링크를 확인했습니다. 새 비밀번호를 입력해 주세요.')}}
+$('completePasswordReset').onclick=async()=>{const p1=$('recoveryPassword').value,p2=$('recoveryPassword2').value,msg=$('recoveryMessage');if(p1.length<8)return msg.textContent='새 비밀번호는 8자 이상 입력해 주세요.';if(p1!==p2)return msg.textContent='비밀번호 확인이 일치하지 않습니다.';if(!recoveryAccessToken)return msg.textContent='재설정 링크의 인증정보가 없습니다. 재설정 메일을 다시 요청해 주세요.';try{await OneCutStudent.updatePassword(recoveryAccessToken,p1);msg.textContent='비밀번호를 변경했습니다. 새 비밀번호로 로그인하세요.';recoveryAccessToken='';history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>{$('passwordRecoveryPanel').hidden=true;$('studentAuthForm').style.display='block'},800)}catch(err){msg.textContent='비밀번호 변경 실패: '+err.message}};
+
+$('studentSignup').onclick=async()=>{try{
+ const email=$('studentEmail').value.trim(),pw=$('studentPassword').value;
+ const result=await OneCutStudent.signup(email,pw);
+ if(result.confirmation_required){studentStatus('가입 요청이 접수됐습니다. 인증 메일을 확인한 뒤 로그인해 주세요.');return;}
+ useStudentAccount(result.user);await syncStudentProgress();
+ }catch(err){studentStatus('회원가입 실패: '+err.message)}};
+async function resumeStudent(){try{const r=await OneCutStudent.resume();if(r?.user?.email){useStudentAccount(r.user);await syncStudentProgress()}}catch(err){studentStatus('세션 만료 · 다시 로그인해 주세요.')}}
+function isReviewDue(c,now=Date.now()){
+ const p=progress[c.id];if(!p||!p.attempts)return false;
+ const t=Date.parse(p.nextReview||'');return !Number.isFinite(t)||t<=now;
+}
+function nextReviewDate(p){
+ if(!p?.attempts||!p.nextReview)return null;
+ const date=new Date(p.nextReview);
+ return Number.isFinite(date.getTime())?date:null;
+}
+function formatReviewTime(p){
+ const date=nextReviewDate(p);
+ if(!date)return '복습 일정 미설정';
+ const formatted=new Intl.DateTimeFormat('ko-KR', {month:'long',day:'numeric',weekday:'short',hour:'numeric',minute:'2-digit',hour12:true}).format(date);
+ return date.getTime()<=Date.now()?'지금 복습 가능 · '+formatted:formatted;
+}
+function recentResults(p,limit=6){
+ return (Array.isArray(p?.history)?p.history:[]).filter(h=>h&&['again','hard','good','easy'].includes(h.result)).slice(-limit).map(h=>h.result);
+}
+function derivedSuccessStreak(p){
+ if(Number.isInteger(p?.successStreak)&&p.successStreak>=0)return p.successStreak;
+ const r=recentResults(p,12);let n=0;
+ for(let i=r.length-1;i>=0;i--){if(['good','easy'].includes(r[i]))n++;else break;}
+ return n;
+}
+function derivedIntervalDays(p){
+ if(Number.isFinite(Number(p?.intervalDays))&&Number(p.intervalDays)>0)return Number(p.intervalDays);
+ const a=Date.parse(p?.updated||''),b=Date.parse(p?.nextReview||'');
+ return Number.isFinite(a)&&Number.isFinite(b)&&b>a?Math.max(1/144,(b-a)/86400000):0;
+}
+function memoryState(c){
+ const p=progress[c.id]||{};if(!p.attempts)return 'new';
+ if(['again','hard'].includes(p.value))return 'relearn';
+ const streak=derivedSuccessStreak(p),interval=derivedIntervalDays(p);
+ if((p.mastered===true)||(streak>=4&&interval>=30&&['good','easy'].includes(p.value)))return 'mastered';
+ return 'learning';
+}
+function isMastered(c){return memoryState(c)==='mastered'}
+function masteryLabel(c){const state=memoryState(c);return state==='mastered'?'완전 암기':state==='relearn'?'다시 외우기':state==='learning'?'암기 진행':'미학습'}
+function reviewScheduleSummary(){
+ const upcoming=cards.map(c=>({c,date:nextReviewDate(progress[c.id])}))
+  .filter(o=>o.date&&o.date.getTime()>Date.now())
+  .sort((a,b)=>a.date-b.date).slice(0,5);
+ if(!upcoming.length)return '<p class="small">예약된 복습 일정이 없습니다. 단어를 학습하면 다음 복습 시각이 표시됩니다.</p>';
+ return '<div class="review-schedule-list"><h3>다가오는 복습</h3>'+upcoming.map(({c})=>
+  '<div class="review-schedule-item"><strong>'+e(c.word)+'</strong><span>'+e(formatReviewTime(progress[c.id]))+'</span></div>'
+ ).join('')+'</div>';
+}
+function learningDaySet(){
+ const days=new Set();
+ for(const c of cards){
+  const p=progress[c.id]||{};
+  if(Array.isArray(p.history))for(const h of p.history){const t=Date.parse(h?.at||'');if(Number.isFinite(t))days.add(dayKey(t));}
+  else if(p.attempts&&Number.isFinite(Date.parse(p.updated||'')))days.add(dayKey(Date.parse(p.updated)));
+ }
+ return days;
+}
+function currentStreak(){
+ const days=learningDaySet();if(!days.size)return 0;
+ const cursor=new Date();cursor.setHours(0,0,0,0);
+ if(!days.has(dayKey(cursor))){cursor.setDate(cursor.getDate()-1);if(!days.has(dayKey(cursor)))return 0;}
+ let n=0;while(days.has(dayKey(cursor))){n++;cursor.setDate(cursor.getDate()-1)}return n;
+}
+function todayAccuracy(){
+ const key=dayKey(Date.now()),events=allHistory().filter(h=>dayKey(h.when)===key);
+ if(!events.length)return null;
+ const good=events.filter(h=>['good','easy'].includes(h.result)).length;
+ return Math.round(good/events.length*100);
+}
+function updateDailySummary(){
+ const today=new Date().toLocaleDateString('en-CA');
+ const now=Date.now();
+ const todayCount=cards.filter(c=>{const p=progress[c.id];return p?.attempts&&p.updated&&new Date(p.updated).toLocaleDateString('en-CA')===today}).length;
+ const due=cards.filter(c=>isReviewDue(c,now)).length;
+ const learned=cards.filter(c=>progress[c.id]?.attempts).length;
+ const weak=cards.filter(isWeak).length;
+ const mastered=cards.filter(isMastered).length;
+ const accuracy=todayAccuracy(),streak=currentStreak();
+ $('dailyDate').textContent=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+ $('statToday').textContent=String(todayCount);
+ $('statAccuracy').textContent=accuracy===null?'-':String(accuracy);
+ $('statAccuracyUnit').textContent=accuracy===null?'퀴즈 전':'%';
+ $('statDue').textContent=String(due);
+ $('statWeak').textContent=String(weak);
+ $('statMastered').textContent=String(mastered);
+ $('statLearned').textContent=String(learned);
+ $('statStreak').textContent=String(streak);
+ $('dailyGoalFill').style.width=(Math.min(5,todayCount)/5*100)+'%';$('dailyGoalTrack').setAttribute('aria-valuenow',String(Math.min(5,todayCount)));
+ $('dailyGoalText').textContent=todayCount>=5?'오늘의 목표 5개 달성!':`오늘의 목표 5개 중 ${todayCount}개 학습`;
+ $('startTodayReview').textContent=due?'오늘 복습 시작 ('+due+')':'복습 일정 확인';
+ const upcoming=cards.map(c=>nextReviewDate(progress[c.id])).filter(d=>d&&d.getTime()>now).sort((a,b)=>a-b);
+ $('dailyNextReview').textContent=due?'지금 복습할 단어 '+due+'개':upcoming.length?'다음 복습: '+new Intl.DateTimeFormat('ko-KR',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}).format(upcoming[0]):'복습 예약 없음';
+ let title='오늘의 5단어부터 시작하세요',text='5단어 학습 → 바로 퀴즈 → 틀린 단어 재학습 순서로 진행합니다.',action='daily';
+ if(due){title=`복습할 단어가 ${due}개 있어요`;text='새 단어보다 예정된 복습을 먼저 처리하면 기억 유지에 유리합니다.';action='review'}
+ else if(weak){title=`취약 단어 ${weak}개를 다시 잡아볼까요?`;text='모름·헷갈림으로 남은 단어를 먼저 복습하면 다음 퀴즈가 쉬워집니다.';action='weak'}
+ else if(todayCount>=5){title='오늘의 5단어 목표를 달성했어요';text=accuracy===null?'뜻 퀴즈로 오늘 기억을 한 번 더 확인해 보세요.':`오늘 평가 기준 기억 성공률은 ${accuracy}%입니다.`;action='quiz'}
+ $('achievementTitle').textContent=title;$('achievementText').textContent=text;$('achievementAction').dataset.action=action;
+ $('achievementAction').textContent=action==='review'?'복습 시작':action==='weak'?'다시 외울 단어 학습':action==='quiz'?'뜻 퀴즈 시작':'오늘의 5단어 학습';
+}
+// v3.7.0: account-specific learning analytics from actual (not fabricated) review events.
+function allHistory(){
+ const events=[];
+ for(const c of cards){
+  const p=progress[c.id]||{};
+  if(Array.isArray(p.history)&&p.history.length){
+   for(const h of p.history){const when=Date.parse(h.at||'');if(Number.isFinite(when)&&['again','hard','good','easy'].includes(h.result))events.push({when,result:h.result,word:c.word});}
+  }else if(p.attempts&&Number.isFinite(Date.parse(p.updated||''))){
+   // Legacy format contains only the latest evaluation; older events cannot be reconstructed.
+   events.push({when:Date.parse(p.updated),result:p.value,word:c.word,legacy:true});
+  }
+ }
+ return events;
+}
+function dayKey(time){const d=new Date(time);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function renderStats(){
+ const events=allHistory(),today=new Date();today.setHours(0,0,0,0);
+ const dates=Array.from({length:7},(_,i)=>{const d=new Date(today);d.setDate(d.getDate()-6+i);return {key:dayKey(d),label:(d.getMonth()+1)+'/'+d.getDate(),count:0}});
+ const counts=new Map(dates.map(x=>[x.key,x]));events.forEach(h=>{const d=counts.get(dayKey(h.when));if(d)d.count++});
+ const total=events.length,successful=events.filter(h=>['good','easy'].includes(h.result)).length;
+ const learned=cards.filter(c=>progress[c.id]?.attempts).length,due=cards.filter(c=>isReviewDue(c)).length;
+ const mastered=cards.filter(isMastered),learning=cards.filter(c=>memoryState(c)==='learning');
+ const weak=cards.filter(isWeak),upcoming=cards.map(c=>({c,date:nextReviewDate(progress[c.id])})).filter(x=>x.date&&x.date>Date.now()).sort((a,b)=>a.date-b.date).slice(0,5);
+ const max=Math.max(1,...dates.map(d=>d.count));
+ $('content').innerHTML=`<h2>나의 학습 분석</h2><p class="sub">실제 학습 평가 기록에 기반한 통계입니다. 기존 기록은 마지막 평가만 반영될 수 있습니다.</p>
+ <div class="analytics-grid"><div><small>학습한 단어</small><strong>${learned} / ${cards.length}</strong></div><div><small>완전 암기</small><strong>${mastered.length}개</strong></div><div><small>암기 진행</small><strong>${learning.length}개</strong></div><div><small>다시 외울 단어</small><strong>${weak.length}개</strong></div><div><small>복습 대기</small><strong>${due}개</strong></div><div><small>평가 기록</small><strong>${total}회</strong></div></div>
+ <h3>최근 7일 평가 횟수</h3><div class="analytics-bars" role="img" aria-label="최근 7일 단어 평가 횟수 ${dates.map(d=>d.label+' '+d.count+'회').join(', ')}">${dates.map(d=>`<div class="analytics-day"><b>${d.count}</b><div class="analytics-track"><div class="analytics-bar" style="height:${Math.round(d.count/max*100)}%"></div></div><small>${d.label}</small></div>`).join('')}</div>
+ <h3>다시 외울 단어 <span class="small">${weak.length}개</span></h3>${weak.length?`<div class="analytics-word-list">${weak.slice(0,20).map(c=>`<button class="btn" type="button" data-stats-word="${e(c.id)}">${e(c.word)} · ${progress[c.id]?.value==='again'?'모름':'헷갈림'}</button>`).join('')}</div><button class="btn primary" id="studyWeakNow" type="button">취약 단어 학습</button>`:'<p class="small">모름·헷갈림으로 평가된 단어가 없습니다.</p>'}
+ <h3>다음 복습 일정</h3>${upcoming.length?`<div class="review-schedule-list">${upcoming.map(x=>`<div class="review-schedule-item"><strong>${e(x.c.word)}</strong><span>${e(formatReviewTime(progress[x.c.id]))}</span></div>`).join('')}</div>`:'<p class="small">예약된 복습 일정이 없습니다.</p>'}`;
+ document.querySelectorAll('[data-stats-word]').forEach(b=>b.onclick=()=>{const i=cards.findIndex(c=>c.id===b.dataset.statsWord);if(i>=0){idx=i;tab='weak';render()}});
+ if($('studyWeakNow'))$('studyWeakNow').onclick=()=>{tab='weak';idx=cards.findIndex(isWeak);render()};
+}
+$('startDailySession').onclick=()=>{stopSpeech();startDailySession()};$('startPersonalPlan').onclick=()=>{stopSpeech();startDailySession()};
+$('startTodayReview').onclick=()=>{stopSpeech();tab='review';reveal=false;render();$('content').scrollIntoView({behavior:'smooth',block:'start'})};
+$('achievementAction').onclick=()=>{stopSpeech();const action=$('achievementAction').dataset.action||'daily';if(action==='review'){tab='review';reveal=false;render()}else if(action==='weak'){const first=cards.findIndex(isWeak);tab='weak';if(first>=0)idx=first;render()}else if(action==='quiz'){tab='meaning-quiz';createQuiz('meaning-quiz');renderQuiz()}else startDailySession();$('content').scrollIntoView({behavior:'smooth',block:'start'})};
+function stressed(c){const [s,t]=c.stress;return e(c.word.slice(0,s))+'<span class="stress">'+e(c.word.slice(s,t))+'</span>'+e(c.word.slice(t))}
+function render(){updateDailySummary();refreshPersonalPlan();if((tab==='review'||tab==='exam'||tab.endsWith('-quiz')||!cards.length||(cards[idx]?.id!==speechCardId&&speechMode)))stopSpeech();document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('primary',b.dataset.tab===tab));$('searchArea').style.display=(tab==='review'||tab==='course'||tab==='daily'||tab==='stats'||tab==='exam'||tab.endsWith('-quiz'))?'none':'block';if(tab==='exam'){renderExam();return}if(tab==='stats'){renderStats();return}if(tab==='daily'){renderDailySession();return}if(tab.endsWith('-quiz')){renderQuiz();return}if(tab==='review'){renderReview();return}if(tab==='course'&&cards.length){idx=Math.max(0,Math.min(cards.length-1,idx));renderCourse();return}if(tab==='favorites'&&cards.length&&!progress[cards[idx]?.id]?.favorite){const first=cards.findIndex(c=>progress[c.id]?.favorite);if(first>=0)idx=first;}if(tab==='weak'&&cards.length&&!isWeak(cards[idx])){const first=cards.findIndex(isWeak);if(first>=0)idx=first;}if(tab==='mastered'&&cards.length&&!isMastered(cards[idx])){const first=cards.findIndex(isMastered);if(first>=0)idx=first;}if(tab==='unlearned'&&cards.length&&progress[cards[idx]?.id]?.attempts){const first=cards.findIndex(c=>!progress[c.id]?.attempts);if(first>=0)idx=first;}renderList();if(tab==='favorites'&&!cards.some(c=>progress[c.id]?.favorite)){$('content').innerHTML='<div class="blank">즐겨찾기한 단어가 없습니다. 학습 카드에서 ☆ 버튼을 눌러 추가하세요.</div>';return;}if(tab==='weak'&&!cards.some(isWeak)){$('content').innerHTML='<div class="blank">다시 외울 단어가 없습니다. 모름·헷갈림으로 평가하면 이곳에 자동으로 모입니다.</div>';return;}if(tab==='mastered'&&!cards.some(isMastered)){$('content').innerHTML='<div class="blank">아직 완전 암기 단계에 도달한 단어가 없습니다. 여러 번 성공적으로 복습해 30일 이상 간격에 도달하면 이곳에 표시됩니다.</div>';return;}if(tab==='unlearned'&&!cards.some(c=>!progress[c.id]?.attempts)){$('content').innerHTML='<div class="blank">공개된 모든 단어를 한 번 이상 학습했습니다. 복습 메뉴에서 다시 학습하세요.</div>';return;}renderCard()}
+// v3.9: a short, guided daily learning session; progress is stored in the existing
+// per-account review records, without adding database tables or separate login state.
+function dailyQueue(limit=5){
+ const now=Date.now(),unique=new Set(),result=[];
+ const due=cards.filter(c=>isReviewDue(c,now)).sort((a,b)=>Date.parse(progress[a.id]?.nextReview||'')-Date.parse(progress[b.id]?.nextReview||''));
+ const weak=cards.filter(isWeak).sort((a,b)=>(progress[b.id]?.lapses||0)-(progress[a.id]?.lapses||0));
+ const fresh=cards.filter(c=>!progress[c.id]?.attempts);
+ const add=(list,n)=>{for(const c of list){if(result.length>=limit||n<=0)break;if(c?.id&&!unique.has(c.id)){unique.add(c.id);result.push(c.id);n--}}};
+ if(weak.length>=2){add(weak,2);add(due,1);add(fresh,2)}
+ else if(due.length>=2){add(due,2);add(weak,1);add(fresh,2)}
+ else {add(fresh,3);add(due,1);add(weak,1)}
+ add(weak,limit-result.length);add(due,limit-result.length);add(fresh,limit-result.length);
+ // Do not fill spare slots with mastered or not-yet-due words. If nothing is due, today's plan is complete.
+ return result;
+}
+function personalPlanSummary(){const ids=dailyQueue(5),now=Date.now();let weak=0,due=0,fresh=0;for(const id of ids){const c=cards.find(x=>x.id===id);if(!c)continue;if(isWeak(c))weak++;else if(isReviewDue(c,now))due++;else if(!progress[id]?.attempts)fresh++;}return {ids,weak,due,fresh}}
+function refreshPersonalPlan(){const el=$('personalPlanMeta');if(!el)return;const p=personalPlanSummary();$('personalPlanTitle').textContent=p.ids.length?'오늘의 맞춤 '+p.ids.length+'단어':'오늘 학습 완료';el.textContent=p.ids.length?`신규 ${p.fresh} · 복습 ${p.due} · 취약 ${p.weak} · 학습상태에 따라 자동 조절`:'현재 새로 학습하거나 복습할 공개 단어가 없습니다.';$('startPersonalPlan').disabled=!p.ids.length}
+function startDailySession(){
+ dailySession={ids:dailyQueue(),cursor:0,results:[],revealed:false,kind:'daily',title:'AI 맞춤 5단어 학습'};
+ tab='daily';render();$('content').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function startFocusedSession(ids,title='오답 집중 재학습'){
+ const clean=[...new Set((ids||[]).filter(id=>cards.some(c=>c.id===id)))].slice(0,10);
+ dailySession={ids:clean,cursor:0,results:[],revealed:false,kind:'focused',title};
+ tab='daily';render();$('content').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderDailySession(){
+ if(!dailySession){$('content').innerHTML='<div class="daily-session"><h2>AI 맞춤 5단어 학습</h2><p>현재 상태에 따라 신규·복습·취약단어를 자동으로 섞어 학습합니다.</p><button class="btn primary" id="beginDaily">학습 시작</button></div>';$('beginDaily').onclick=startDailySession;return;}
+ const session=dailySession,total=session.ids.length,completed=session.results.length;
+ if(!total){$('content').innerHTML='<div class="daily-session"><h2>오늘 학습 완료</h2><p>현재 복습하거나 새로 학습할 공개 단어가 없습니다.</p><button class="btn" id="endDaily">단어 검색으로</button></div>';$('endDaily').onclick=()=>{dailySession=null;tab='search';render()};return;}
+ if(session.cursor>=total){
+  const strong=session.results.filter(x=>x==='good'||x==='easy').length;
+  const weakIds=session.ids.filter((id,i)=>['again','hard'].includes(session.results[i]));
+  const isFocused=session.kind==='focused';
+  $('content').innerHTML=`<div class="daily-session"><h2>${e(isFocused?'집중 재학습을 마쳤어요!':'오늘의 학습을 마쳤어요!')}</h2><div class="daily-session-result">${completed}<small>개 단어 학습</small></div><p>기억함·매우 잘 기억 ${strong}개 · 다시 볼 단어 ${completed-strong}개</p><p class="small">학습 결과와 다음 복습 일정은 자동 저장됩니다.</p><div class="controls"><button class="btn primary" id="dailyCheckQuiz">${isFocused?'다시 확인 퀴즈':'방금 배운 단어 확인 퀴즈'}</button>${weakIds.length?`<button class="btn" id="dailyRetryWeak">헷갈린 ${weakIds.length}개 다시 보기</button>`:''}<button class="btn" id="dailyFinish">학습 분석 보기</button></div></div>`;
+  $('dailyCheckQuiz').onclick=()=>{const ids=[...session.ids];dailySession=null;tab='meaning-quiz';createQuiz('meaning-quiz',ids,{origin:'daily'});renderQuiz()};
+  if($('dailyRetryWeak'))$('dailyRetryWeak').onclick=()=>startFocusedSession(weakIds,'헷갈린 단어 집중 재학습');
+  $('dailyFinish').onclick=()=>{dailySession=null;tab='stats';render()};return;
+ }
+ const c=cards.find(x=>x.id===session.ids[session.cursor]);if(!c){session.cursor++;renderDailySession();return;}
+ const done=session.cursor;
+ const answer=session.revealed?`<div class="daily-answer"><div class="daily-answer-meaning">${e(c.meaning)}</div>${api.cardMarkup(c)}${c.example?`<div class="daily-example"><b>예문</b><p>${e(c.example)}</p><p class="muted">${e(c.translation||'')}</p></div>`:''}</div><p class="small">얼마나 기억났나요? 선택하면 다음 단어로 이동합니다. (키보드 1~4)</p><div class="controls daily-grades">${[['again','모름'],['hard','헷갈림'],['good','기억함'],['easy','매우 잘 기억']].map(([v,label])=>`<button class="btn ${v==='easy'?'primary':''}" type="button" data-daily-grade="${v}">${label}</button>`).join('')}</div>`:`<div class="daily-question"><span>이 단어의 뜻을 떠올려 보세요</span><strong>${e(c.word)}</strong><small>${e(c.pos||'')}</small></div><button class="btn primary daily-reveal" id="dailyReveal">정답과 그림 확인</button>`;
+ $('content').innerHTML=`<div class="daily-session"><div class="daily-session-top"><h2>${e(session.title||'오늘의 5단어 학습')}</h2><span>${done+1} / ${total}</span></div><div class="daily-meter" role="progressbar" aria-label="오늘의 학습 진행률" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><div style="width:${done/total*100}%"></div></div>${answer}<div class="daily-session-footer"><button class="btn" id="leaveDaily">학습 나가기</button><span class="small">학습 결과는 선택할 때마다 저장됩니다.</span></div></div>`;
+ if($('dailyReveal'))$('dailyReveal').onclick=()=>{session.revealed=true;renderDailySession()};
+ document.querySelectorAll('[data-daily-grade]').forEach(btn=>btn.onclick=()=>{
+   if(!session.revealed)return;
+   const grade=btn.dataset.dailyGrade;
+   // Advance before rendering; keep the scheduled review interval from record().
+   record(c.id,grade,false);session.results.push(grade);session.cursor++;session.revealed=false;stopSpeech();renderDailySession();
+ });
+ $('leaveDaily').onclick=()=>{dailySession=null;stopSpeech();tab='search';render()};
+}
+// v3.7: Recall checks share the existing spaced-repetition history and cloud sync.
+function quizShuffle(items){
+ const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;
+}
+function createQuiz(mode,questionIds=null,options={}){
+ const unique=cards.filter(c=>c?.id&&String(c.word||'').trim()&&String(c.meaning||'').trim());
+ const pool=questionIds?questionIds.map(id=>unique.find(c=>c.id===id)).filter(Boolean):quizShuffle(unique).slice(0,Math.min(10,unique.length));
+ quiz={mode,questionIds:pool.map(c=>c.id),cursor:0,correct:0,answered:false,lastCorrect:false,selected:'',missed:[],origin:options.origin||'',startedAt:new Date().toISOString()};
+}
+function quizCurrent(){return quiz&&cards.find(c=>c.id===quiz.questionIds[quiz.cursor]);}
+function quizAnswer(answer){
+ if(!quiz||quiz.answered||quiz.cursor>=quiz.questionIds.length)return;
+ const c=quizCurrent();if(!c)return;
+ const correct=quiz.mode==='meaning-quiz'?answer===c.id:String(answer||'').trim().toLocaleLowerCase('en-US')===String(c.word).trim().toLocaleLowerCase('en-US');
+ quiz.answered=true;quiz.selected=String(answer||'');quiz.lastCorrect=correct;
+ if(correct)quiz.correct++;else quiz.missed.push(c.id);
+ // Correct => remembered, missed => retry in 10 minutes. Keep original card schema.
+ record(c.id,correct?'good':'again',false);
+ renderQuiz();
+}
+function quizNext(){if(!quiz||!quiz.answered)return;quiz.cursor++;quiz.answered=false;quiz.selected='';renderQuiz();}
+function renderQuiz(){
+ const mode=tab,title=mode==='meaning-quiz'?'뜻 맞히기 퀴즈':'영어 철자 퀴즈';
+ if(!quiz||quiz.mode!==mode)createQuiz(mode);
+ const q=quiz,el=$('content');
+ if(!q.questionIds.length){el.innerHTML='<div class="blank">공개된 학습 단어가 없습니다. 관리자가 공개한 카드가 생기면 퀴즈가 시작됩니다.</div>';return;}
+ if(q.cursor>=q.questionIds.length){
+  const missedUnique=[...new Set(q.missed)];
+  el.innerHTML=`<div class="quiz-shell"><h2>${title} · 완료</h2><div class="quiz-score">${q.correct} / ${q.questionIds.length}</div><p>정답률 ${Math.round(q.correct/q.questionIds.length*100)}% · 틀린 단어 ${missedUnique.length}개</p>${missedUnique.length?`<div class="quiz-missed"><strong>다시 볼 단어</strong>${missedUnique.map(id=>{const c=cards.find(x=>x.id===id);return c?`<button class="btn" type="button" data-quiz-missed="${e(c.id)}">${e(c.word)}</button>`:''}).join('')}</div>`:''}<div class="quiz-actions">${missedUnique.length?`<button class="btn primary" id="quizStudyMissed" type="button">틀린 ${missedUnique.length}개 집중 재학습</button><button class="btn" id="quizRetryMissed" type="button">바로 다시 풀기</button>`:`${q.origin==='daily'?'<button class="btn primary" id="quizNextDaily" type="button">다음 5단어 학습</button>':''}`}<button class="btn" id="quizRestart" type="button">새 퀴즈 시작</button><button class="btn" id="quizGoReview" type="button">내 복습으로</button></div></div>`;
+  if($('quizStudyMissed'))$('quizStudyMissed').onclick=()=>{quiz=null;startFocusedSession(missedUnique,'퀴즈 오답 집중 재학습')};
+  if($('quizRetryMissed'))$('quizRetryMissed').onclick=()=>{createQuiz(mode,missedUnique,{origin:q.origin});renderQuiz()};
+  if($('quizNextDaily'))$('quizNextDaily').onclick=()=>{quiz=null;startDailySession()};
+  $('quizRestart').onclick=()=>{quiz=null;renderQuiz()};$('quizGoReview').onclick=()=>{quiz=null;tab='review';reveal=false;render()};
+  document.querySelectorAll('[data-quiz-missed]').forEach(b=>b.onclick=()=>{const i=cards.findIndex(c=>c.id===b.dataset.quizMissed);if(i>=0){quiz=null;idx=i;tab='search';render()}});return;
+ }
+ const c=quizCurrent();if(!c){quiz=null;renderQuiz();return;}
+ const isMeaning=mode==='meaning-quiz';
+ const opts=isMeaning?quizShuffle([c,...quizShuffle(cards.filter(x=>x.id!==c.id&&String(x.meaning||'').trim()!==String(c.meaning||'').trim())).slice(0,3)]):[];
+ // Lock options after first render, including wrong-answer feedback, to prevent reshuffling.
+ if(isMeaning&&(!q.optionIds||q.optionCardId!==c.id)) {q.optionIds=opts.map(x=>x.id);q.optionCardId=c.id;}
+ const choices=(q.optionIds||[]).map(id=>cards.find(x=>x.id===id)).filter(Boolean);
+ el.innerHTML=`<div class="quiz-shell"><div class="quiz-meta"><span>${title}</span><span>${q.cursor+1} / ${q.questionIds.length}</span></div><div class="quiz-meter"><div style="width:${q.cursor/q.questionIds.length*100}%"></div></div><div class="quiz-prompt"><p>${isMeaning?'다음 영어 단어의 뜻은?':'다음 뜻에 맞는 영어 단어를 입력하세요.'}</p><strong>${e(isMeaning?c.word:c.meaning)}</strong></div>${isMeaning?`<div class="quiz-choices">${choices.map((x,i)=>`<button class="btn quiz-choice ${q.answered&&x.id===c.id?'quiz-correct':q.answered&&x.id===q.selected&&!q.lastCorrect?'quiz-wrong':''}" type="button" data-quiz-answer="${e(x.id)}" ${q.answered?'disabled':''}><span class="quiz-choice-index">${i+1}</span><span>${e(x.meaning)}</span></button>`).join('')}</div>`:`<form id="quizSpellingForm" class="quiz-spelling"><label for="quizSpellingInput">영어 철자</label><input id="quizSpellingInput" type="text" inputmode="text" autocapitalize="off" autocomplete="off" spellcheck="false" ${q.answered?'disabled':''} placeholder="영어 단어 입력" aria-label="영어 철자 입력"><button class="btn primary" type="submit" ${q.answered?'disabled':''}>정답 확인</button></form>`}${q.answered?`<div class="quiz-feedback ${q.lastCorrect?'quiz-feedback-good':'quiz-feedback-bad'}" role="status"><strong>${q.lastCorrect?'정답입니다!':'다시 기억해 보세요.'}</strong><p>${e(c.word)} — ${e(c.meaning)}</p>${c.mnemonic?`<p>연상: ${e(c.mnemonic)}</p>`:''}<small>${q.lastCorrect?'3일 후부터 복습 예정':'10분 후 다시 복습 예정'} · 학습기록에 반영</small></div><div class="quiz-actions"><button class="btn primary" id="quizNext" type="button">${q.cursor+1===q.questionIds.length?'결과 보기':'다음 문제'}</button></div>`:''}<p class="small quiz-note">${q.origin==='daily'?'방금 학습한 단어만 확인합니다.':'공개된 단어에서 최대 10문제를 출제합니다.'} 정답은 복습 기록에 자동 반영됩니다.</p></div>`;
+ if(isMeaning)document.querySelectorAll('[data-quiz-answer]').forEach(b=>b.onclick=()=>quizAnswer(b.dataset.quizAnswer));
+ else if(!q.answered){const input=$('quizSpellingInput');$('quizSpellingForm').onsubmit=ev=>{ev.preventDefault();if(!input.value.trim()){input.focus();return;}quizAnswer(input.value)};}
+ if(q.answered)$('quizNext').onclick=quizNext;
+}
+
+function isWeak(c){return ['again','hard'].includes(progress[c.id]?.value)}
+function renderList(){let q=$('q').value.trim().toLowerCase();let found=cards.map((c,i)=>({c,i})).filter(({c})=>(c.word.toLowerCase().includes(q)||c.meaning.includes(q))&&(tab!=='favorites'||progress[c.id]?.favorite)&&(tab!=='weak'||isWeak(c))&&(tab!=='mastered'||isMastered(c))&&(tab!=='unlearned'||!progress[c.id]?.attempts));$('count').textContent=`공개된 카드 ${cards.length}개 · 검색 결과 ${found.length}개`;$('list').innerHTML=found.map(({c,i})=>`<button class="listbutton ${idx===i?'active':''}" data-open="${i}"><span><b>${e(c.word)}</b><small>${e(c.pos)} · ${e(c.meaning)}</small></span><span class="tag">학습</span></button>`).join('')||'<div class="notice">검색 결과가 없습니다.</div>'}
+function renderCourse(){renderCard();if(!cards.length)return;
+ const p=progress[cards[idx].id]||{};
+ const summary=document.createElement('div');summary.className='course-toolbar';summary.innerHTML=`<strong>순서 학습 · ${idx+1}/${cards.length}</strong><span>학습한 카드 ${cards.filter(c=>progress[c.id]?.attempts).length}개</span><button class="btn" id="nextUnstudied">다음 미학습</button>`;
+ const content=$('content');content.prepend(summary);
+ $('nextUnstudied').onclick=()=>{const next=cards.findIndex((c,i)=>i>idx&&!progress[c.id]?.attempts);const fallback=cards.findIndex(c=>!progress[c.id]?.attempts);stopSpeech();idx=next>=0?next:fallback>=0?fallback:Math.min(idx+1,cards.length-1);renderCourse()};
+}
+function renderCard(){if(!cards.length){$('content').innerHTML=`<div class="blank"><strong>아직 공개된 단어가 없습니다.</strong>${e(window.onecutSyncError?'공개 데이터 조회 오류: '+window.onecutSyncError:'관리자가 승인 및 공개한 단어가 나타납니다.')}<div style="margin-top:20px"><a class="btn" href="admin.html" style="text-decoration:none">관리자에서 검수하기</a></div></div>`;return}const c=cards[idx],p=progress[c.id]||{},mState=memoryState(c);$('content').innerHTML=`<div class="row"><span class="tag published">검수 승인 · 공개 카드</span><span class="tag memory-${mState}">${e(masteryLabel(c))}</span><span class="small">${idx+1} / ${cards.length}</span></div><div class="row" style="justify-content:flex-end;margin-top:13px"><span class="small">${e(c.pos)} · 카드 글자는 별도 데이터로 자동 표시</span><button class="btn" id="speakWord" type="button">발음 듣기</button><button class="btn audio-icon-btn" id="repeatWord" type="button" title="단어 발음을 계속 반복" aria-label="단어 발음 무한 반복" aria-pressed="false">∞</button><button class="btn audio-icon-btn" id="stopWord" type="button" title="단어 발음 정지" aria-label="단어 발음 정지">■</button><button class="btn bookmark ${p.favorite?'active':''}" id="favoriteBtn" aria-pressed="${!!p.favorite}">${p.favorite?'★ 즐겨찾기 해제':'☆ 즐겨찾기'}</button></div>${api.cardMarkup(c)}<div class="divider"></div><h3>예문 <button class="btn" id="speakExample" type="button" style="margin-left:8px">예문 듣기</button><button class="btn audio-icon-btn" id="repeatExample" type="button" title="예문을 계속 반복" aria-label="예문 무한 반복" aria-pressed="false">∞</button><button class="btn audio-icon-btn" id="stopExample" type="button" title="예문 정지" aria-label="예문 정지">■</button></h3><p>${e(c.example)}</p><p class="muted">${e(c.translation)}</p><div class="divider"></div><div class="controls"><button class="btn" data-memory="again">모름</button><button class="btn" data-memory="hard">헷갈림</button><button class="btn" data-memory="good">기억함</button><button class="btn primary" data-memory="easy">매우 잘 기억</button></div><p class="small">${p.updated?'마지막 학습: '+new Date(p.updated).toLocaleString('ko-KR')+' · '+(p.attempts||0)+'회':'아직 학습 기록 없음'}${p.attempts?'<span class="review-next-time">다음 복습: '+e(formatReviewTime(p))+'</span>':''}</p><div class="row"><button class="btn" id="prev" ${idx===0?'disabled':''}>이전</button><button class="btn" id="next" ${idx===cards.length-1?'disabled':''}>다음</button></div>`;
+updateSpeechButtons();$('favoriteBtn').onclick=()=>{const p=progress[c.id]||{attempts:0};p.favorite=!p.favorite;progress[c.id]=p;saveProgress();render();};$('speakWord').onclick=()=>playSpeech(c.word,'word',false);$('repeatWord').onclick=()=>toggleRepeat(c.word,'word');$('stopWord').onclick=stopSpeech;$('speakExample').onclick=()=>playSpeech(c.example,'example',false);$('repeatExample').onclick=()=>toggleRepeat(c.example,'example');$('stopExample').onclick=stopSpeech;$('prev').onclick=()=>{stopSpeech();idx--;render()};$('next').onclick=()=>{stopSpeech();idx++;render()};document.querySelectorAll('[data-memory]').forEach(b=>b.onclick=()=>record(c.id,b.dataset.memory))}
+// 한 번 듣기 / 무한 반복 / 정지: 음성은 카드 이동 시 자동 중지됩니다.
+let speechSession=0, speechMode='', speechRepeat=false, speechCardId='';
+function updateSpeechButtons(){
+ for(const kind of ['word','example']){
+   const repeatBtn=$(kind==='word'?'repeatWord':'repeatExample');
+   const stopBtn=$(kind==='word'?'stopWord':'stopExample');
+   if(!repeatBtn)continue;
+   const active=speechRepeat&&speechMode===kind&&speechCardId===cards[idx]?.id;
+   repeatBtn.classList.toggle('primary',!!active);
+   repeatBtn.setAttribute('aria-pressed',String(!!active));
+   repeatBtn.textContent='∞';
+   if(stopBtn)stopBtn.disabled=!(speechMode===kind&&speechCardId===cards[idx]?.id);
+ }
+}
+function stopSpeech(){
+ speechSession++;speechRepeat=false;speechMode='';speechCardId='';
+ if('speechSynthesis' in window)window.speechSynthesis.cancel();
+ updateSpeechButtons();
+}
+function playSpeech(text,kind,repeat){
+ if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window)){
+   alert('이 환경에서는 음성 합성을 지원하지 않습니다.');return;
+ }
+ stopSpeech();
+ if(!String(text||'').trim())return;
+ speechRepeat=repeat;speechMode=kind;speechCardId=cards[idx]?.id||'';
+ const session=++speechSession;
+ updateSpeechButtons();
+ function speakOnce(){
+   if(session!==speechSession)return;
+   const u=new SpeechSynthesisUtterance(text);
+   u.lang='en-US';u.rate=.85;
+   const voices=window.speechSynthesis.getVoices();
+   u.voice=voices.find(v=>v.lang.toLowerCase().startsWith('en-us'))||voices.find(v=>v.lang.toLowerCase().startsWith('en'))||null;
+   u.onend=()=>{
+     if(session!==speechSession)return;
+     if(repeat&&speechRepeat&&speechCardId===cards[idx]?.id){speakOnce()}
+     else stopSpeech();
+   };
+   u.onerror=()=>{if(session===speechSession)stopSpeech()};
+   window.speechSynthesis.speak(u);
+ }
+ speakOnce();
+}
+function toggleRepeat(text,kind){
+ if(speechRepeat&&speechMode===kind&&speechCardId===cards[idx]?.id){stopSpeech();return;}
+ playSpeech(text,kind,true);
+}
+
+function record(id,value,redraw=true){
+ const p=progress[id]||{attempts:0};
+ const prevInterval=Math.max(0,derivedIntervalDays(p));
+ const prevStreak=derivedSuccessStreak(p);
+ p.attempts++;p.value=value;
+ const now=Date.now();p.updated=new Date(now).toISOString();
+ p.lapses=Math.max(0,Number(p.lapses)||0);
+ let intervalDays=0;
+ if(value==='again'){
+   p.lapses++;p.successStreak=0;intervalDays=1/144; // 10분
+ }else if(value==='hard'){
+   p.successStreak=0;intervalDays=prevInterval>=3?Math.max(1,Math.round(prevInterval*0.45)):1;
+ }else if(value==='good'){
+   p.successStreak=prevStreak+1;
+   intervalDays=prevInterval<1?3:Math.min(60,Math.max(3,Math.round(prevInterval*2.1)));
+ }else{
+   p.successStreak=prevStreak+2;
+   intervalDays=prevInterval<1?7:Math.min(120,Math.max(7,Math.round(prevInterval*2.7)));
+ }
+ p.intervalDays=intervalDays;
+ p.mastered=p.successStreak>=4&&intervalDays>=30&&['good','easy'].includes(value);
+ p.nextReview=new Date(now+intervalDays*86400000).toISOString();
+ p.history=[...(Array.isArray(p.history)?p.history:[]),{at:p.updated,result:value,intervalDays:Number(intervalDays.toFixed(4)),mastered:p.mastered}].slice(-120);
+ progress[id]=p;saveProgress();updateDailySummary();
+ if(!redraw)return;if(tab==='course')renderCourse();else if(tab==='weak'||tab==='mastered'||tab==='unlearned'){render();}else renderCard();
+}
+function renderReview(){const now=Date.now(),due=cards.filter(c=>isReviewDue(c,now)),all=cards.filter(c=>progress[c.id]);const c=due.find(item=>item.id===reviewId)||due[0];reviewId=c?.id||null;$('content').innerHTML=`<h2>내 복습</h2><p class="sub">공개 카드 중 학습 이력 ${all.length}개 · 현재 복습 대상 ${due.length}개</p>${c?`<div class="blank"><strong style="font-size:35px">${e(c.word)}</strong><p>이 단어의 뜻을 떠올려 보세요.</p><div style="margin:18px">${reveal?`<div class="bubble"><b>${e(c.meaning)}</b><p>${e(c.mnemonic)}</p></div>`:`<button class="btn primary" id="reveal">정답 확인</button>`}</div><div class="controls" style="justify-content:center">${reveal?['again','hard','good','easy'].map((v,i)=>`<button class="btn ${i===3?'primary':''}" data-answer="${v}">${['모름','헷갈림','기억함','매우 잘 기억'][i]}</button>`).join(''):''}</div></div>`:'<div class="blank"><strong>지금 복습할 단어가 없습니다.</strong>복습 예정 시간이 되면 이곳에 자동으로 표시됩니다. 모름은 10분 뒤부터 다시 보고, 기억이 안정될수록 복습 간격이 3일·7일·30일 이상으로 늘어납니다.</div>${reviewScheduleSummary()}'}`;if(c){if(!reveal)$('reveal').onclick=()=>{reveal=true;renderReview()};else document.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>{record(c.id,b.dataset.answer);reveal=false;reviewId=null;renderReview()})}}
+$('exportProgress').onclick=()=>{const payload={app:'onecut-v3.4-progress',exported_at:new Date().toISOString(),progress};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='한컷영단어_학습기록_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
+$('importProgress').onchange=async event=>{const file=event.target.files?.[0];if(!file)return;try{if(file.size>1_000_000)throw Error('파일 용량이 너무 큽니다.');const data=JSON.parse(await file.text());if(data.app!=='onecut-v3.4-progress'||!data.progress||typeof data.progress!=='object'||Array.isArray(data.progress))throw Error('한컷영단어 v3.4 학습기록 파일이 아닙니다.');const allowed=new Set(['again','hard','good','easy']);let count=0;const merged={...progress};for(const [id,p] of Object.entries(data.progress)){if(!/^[a-zA-Z0-9_-]{1,90}$/.test(id)||!p||typeof p!=='object'||!Number.isInteger(p.attempts)||p.attempts<0||p.attempts>100000||!allowed.has(p.value||'again'))continue;merged[id]={attempts:p.attempts,value:p.value||'again',updated:String(p.updated||''),nextReview:String(p.nextReview||''),favorite:!!p.favorite,successStreak:Math.max(0,Number(p.successStreak)||0),lapses:Math.max(0,Number(p.lapses)||0),intervalDays:Math.max(0,Number(p.intervalDays)||0),mastered:p.mastered===true,history:Array.isArray(p.history)?p.history.filter(h=>h&&typeof h.at==='string'&&['again','hard','good','easy'].includes(h.result)).slice(-120):[]};count++;}if(!count)throw Error('복원할 학습기록이 없습니다.');if(!confirm(`기존 학습기록에 ${count}건을 병합할까요? 동일 단어는 가져온 기록으로 바뀝니다.`))return;progress=merged;saveProgress();$('progressMsg').textContent=`${count}건의 기록을 복원했습니다.`;render()}catch(ex){$('progressMsg').textContent='복원 실패: '+ex.message}event.target.value='';};
+$('q').oninput=renderList;$('list').onclick=ev=>{let b=ev.target.closest('[data-open]');if(b){stopSpeech();idx=Number(b.dataset.open);render()}};document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{stopSpeech();const next=b.dataset.tab;if(next.endsWith('-quiz')&&tab!==next)quiz=null;tab=next;reveal=false;render()});// Keep due counts current while the page remains open; do not interrupt an answer reveal.
+$('startAssigned').onclick=startAssignedSession;initPasswordRecovery();refreshPersonalPlan();
+setInterval(()=>{if(document.visibilityState==='hidden')return;updateDailySummary();if(tab==='review'&&!reveal)renderReview();},60_000);
+// Optional keyboard controls for hands-free daily recall (never intercept typed input).
+document.addEventListener('keydown',event=>{
+ if(tab!=='daily'||!dailySession||event.ctrlKey||event.altKey||event.metaKey||event.repeat)return;
+ const target=event.target;
+ if(target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(target?.tagName))return;
+ if(!dailySession.revealed&&event.code==='Space'&&$('dailyReveal')){event.preventDefault();$('dailyReveal').click();return;}
+ if(dailySession.revealed&&['Digit1','Digit2','Digit3','Digit4'].includes(event.code)){
+   const values=['again','hard','good','easy'];const v=values[Number(event.code.slice(-1))-1];
+   const b=document.querySelector('[data-daily-grade="'+v+'"]');if(b){event.preventDefault();b.click();}
+ }
+});
+window.addEventListener('pagehide',stopSpeech);window.addEventListener('storage',event=>{if(event.key===api.key)sync()});window.addEventListener(api.EVENT,sync);sync();void resumeStudent();
+</script><script>
+// User-selectable, device-local text size. No effect on account data or Supabase.
+(function(){
+  const key='onecut_font_size';
+  const saved=(()=>{try{return localStorage.getItem(key)==='large'?'large':'normal'}catch(e){return 'normal'}})();
+  const apply=size=>{
+    document.body.classList.toggle('readable-large',size==='large');
+    document.querySelectorAll('[data-font-size]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.fontSize===size)));
+  };
+  apply(saved);
+  document.querySelectorAll('[data-font-size]').forEach(b=>b.addEventListener('click',()=>{
+    const size=b.dataset.fontSize;apply(size);try{localStorage.setItem(key,size)}catch(e){}
+  }));
+  document.documentElement.classList.remove('font-large-preload');
+})();
+
+
+// v5.0 실전 테스트: 뜻/철자/듣기/혼합 10·20문항
+function examPool(){const learned=cards.filter(c=>progress[c.id]?.attempts);return learned.length>=10?learned:cards.slice()}
+function examShuffle(a){return a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1])}
+function startExam(){const count=Number($('examCount')?.value||10),mode=$('examMode')?.value||'mixed',pool=examShuffle(examPool()).slice(0,Math.min(count,examPool().length));examState={count:pool.length,mode,ids:pool.map(c=>c.id),cursor:0,correct:0,answers:[],answered:false,selected:''};renderExam()}
+function examType(){if(!examState)return 'meaning';if(examState.mode!=='mixed')return examState.mode;return ['meaning','spelling','listening'][examState.cursor%3]}
+function examCard(){return examState&&cards.find(c=>c.id===examState.ids[examState.cursor])}
+function examChoices(c){const others=examShuffle(cards.filter(x=>x.id!==c.id&&x.meaning).map(x=>x.meaning)).slice(0,3);return examShuffle([c.meaning,...others])}
+function submitExamAnswer(value){if(!examState||examState.answered)return;const c=examCard(),type=examType();let ok=false;if(type==='spelling')ok=String(value||'').trim().toLowerCase()===String(c.word||'').trim().toLowerCase();else ok=String(value||'')===String(c.meaning||'');examState.answered=true;examState.selected=value;examState.correct+=ok?1:0;examState.answers.push({card_id:c.id,type,result:ok?'correct':'wrong'});if(!ok){const p=progress[c.id]||{attempts:0,history:[]};p.value='hard';p.attempts=Math.max(1,p.attempts||0);p.updated=new Date().toISOString();p.history=[...(p.history||[]),{at:p.updated,result:'hard'}].slice(-90);progress[c.id]=p;saveProgress()}renderExam()}
+async function finishExam(){if(!examState)return;const done={...examState};examState={...done,finished:true};if(studentUserId){try{await OneCutStudent.examAttempt({mode:done.mode,total:done.count,correct:done.correct,card_ids:done.ids,answers:done.answers})}catch(err){studentStatus('실전 테스트 점수는 화면에 표시되지만 서버 기록 저장에 실패했습니다: '+err.message)}}renderExam()}
+function renderExam(){
+ if(!examState){$('content').innerHTML=`<div class="exam-home"><span class="eyebrow">실전 테스트</span><h2>지금 외운 단어를 실제 시험처럼 확인</h2><p class="small">로그인하면 점수가 관리자 리포트에도 누적됩니다. 틀린 단어는 자동으로 취약 복습 대상이 됩니다.</p><div class="exam-settings"><label>문항 수<select id="examCount"><option value="10">10문항</option><option value="20">20문항</option></select></label><label>유형<select id="examMode"><option value="mixed">혼합</option><option value="meaning">영어 → 뜻</option><option value="spelling">뜻 → 철자</option><option value="listening">듣기 → 뜻</option></select></label><button class="btn primary" id="examStart">테스트 시작</button></div></div>`;$('examStart').onclick=startExam;return}
+ if(examState.finished){const score=examState.count?Math.round(examState.correct/examState.count*100):0,wrong=examState.answers.filter(x=>x.result==='wrong').map(x=>cards.find(c=>c.id===x.card_id)).filter(Boolean);$('content').innerHTML=`<div class="exam-result"><span class="eyebrow">테스트 완료</span><h2>${score}점</h2><p>${examState.correct}/${examState.count} 정답</p>${wrong.length?`<div class="student-word-cards">${wrong.map(c=>`<article><b>${e(c.word)}</b><span>${e(c.meaning)}</span><small>취약단어에 자동 반영</small></article>`).join('')}</div>`:'<p class="blank">전부 맞혔습니다.</p>'}<div class="controls"><button class="btn primary" id="examAgain">다시 테스트</button><button class="btn" id="examWeak">틀린 단어 복습</button></div></div>`;$('examAgain').onclick=()=>{examState=null;renderExam()};$('examWeak').onclick=()=>{examState=null;tab='weak';render()};return}
+ const c=examCard();if(!c){finishExam();return}const type=examType(),n=examState.cursor+1,answered=examState.answered;let question='';if(type==='spelling')question=`<p class="exam-prompt">뜻을 보고 영어 철자를 입력하세요.</p><h2>${e(c.meaning)}</h2><input id="examSpelling" class="exam-input" autocomplete="off" ${answered?'disabled':''}><button class="btn primary" id="examSubmitSpell" ${answered?'disabled':''}>정답 확인</button>`;else{const listen=type==='listening'?`<button class="btn primary" id="examListen">발음 듣기</button><p class="exam-prompt">소리를 듣고 뜻을 고르세요.</p>`:`<p class="exam-prompt">영어 단어의 뜻을 고르세요.</p><h2>${e(c.word)}</h2>`;question=listen+`<div class="exam-options">${examChoices(c).map(x=>`<button class="btn" data-exam-choice="${e(x)}" ${answered?'disabled':''}>${e(x)}</button>`).join('')}</div>`}
+ const feedback=answered?`<div class="exam-feedback ${examState.answers.at(-1)?.result==='correct'?'ok':'bad'}">${examState.answers.at(-1)?.result==='correct'?'정답입니다.':'정답: '+e(type==='spelling'?c.word:c.meaning)}</div><button class="btn primary" id="examNext">${n>=examState.count?'결과 보기':'다음 문제'}</button>`:'';$('content').innerHTML=`<div class="exam-card"><div class="daily-session-top"><b>${n} / ${examState.count}</b><span>${examState.correct} 정답</span></div>${question}${feedback}</div>`;if(type==='listening'&&$('examListen'))$('examListen').onclick=()=>playSpeech(c.word,'word',false);document.querySelectorAll('[data-exam-choice]').forEach(b=>b.onclick=()=>submitExamAnswer(b.dataset.examChoice));if($('examSubmitSpell'))$('examSubmitSpell').onclick=()=>submitExamAnswer($('examSpelling').value);if($('examNext'))$('examNext').onclick=()=>{if(n>=examState.count)finishExam();else{examState.cursor++;examState.answered=false;examState.selected='';renderExam()}}
+}
+</script></body></html>
