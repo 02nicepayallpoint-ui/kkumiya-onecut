@@ -12,6 +12,15 @@
 .onecut-meaning{display:table;max-width:100%;margin:0 auto 15px;background:#ffe36e;border:1px solid #ebcd4c;border-radius:24px;padding:9px 18px;font-size:17px;font-weight:850;color:#172338}
 .onecut-scene{border:1px solid #eef0f4;border-radius:13px;overflow:hidden;background:#fff;min-height:180px;display:grid;place-items:center}
 .module-tabs{display:flex;gap:8px;align-items:center;padding:6px 10px;background:#f6f7fa;border:1px solid #e6e9ee;border-radius:12px}
+.exam-wrong-help{margin:12px 0;padding:14px;border-radius:12px;background:#fff7f5;border:1px solid #f5c6be}
+.exam-wrong-help .exam-example{font-size:16px;font-weight:700;margin:10px 0 4px}
+.exam-wrong-help .muted,.exam-wrong-help .small{margin:2px 0}
+.main-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.more-tabs{margin:6px 0 12px;border:1px solid #e6e9ee;border-radius:10px;padding:8px 10px;background:#fff}
+.more-tabs>summary{cursor:pointer;font-size:13px;font-weight:700;color:#465674;list-style:none}
+.more-tabs>summary::-webkit-details-marker{display:none}
+.more-tabs>summary::before{content:'▸ ';color:#e75c54}
+.more-tabs[open]>summary::before{content:'▾ '}
 .module-tabs .small{color:#708097;margin-left:4px;white-space:nowrap}
 .module-tabs button.active,.module-tabs button.primary{background:#172338;color:#fff;border-color:#172338}
 @media(max-width:720px){.module-tabs{padding:4px 6px}.module-tabs .small{display:none}}
